@@ -721,69 +721,108 @@
             </div>
           </div>
 
-          <!-- ПОДМЕНЮ: ПРИСОЕДИНИТЬСЯ К ИГРЕ (ОНЛАЙН FIREBASE RTDB) -->
+          <!-- ПОДМЕНЮ: ПРИСОЕДИНИТЬСЯ К ИГРЕ / СПИСОК КОМНАТ (BACKROOMS ONLINE MANAGER) -->
           <div id="menuViewJoin" class="crt-subview">
             <div class="space-y-1.5 text-xs sm:text-sm">
               <div class="crt-box flex flex-wrap items-center justify-between gap-2">
-                <span>ВАШ ПОЗЫВНОЙ:</span>
-                <input id="inputJoinPlayerName" type="text" maxlength="14" value="HAZMAT-01" class="bg-[#020942] border border-blue-200/60 text-white px-2 py-0.5 font-mono text-xs uppercase w-36 focus:outline-none focus:border-yellow-300" />
-              </div>
-              <div class="crt-box flex flex-wrap items-center justify-between gap-2">
-                <span>ВВЕСТИ КОД КОМНАТЫ:</span>
-                <div class="flex items-center gap-1.5">
-                  <input id="inputJoinRoomCode" type="text" maxlength="12" placeholder="ASYNC-1234" class="bg-[#020942] border border-blue-200/60 text-white px-2 py-0.5 font-mono text-xs uppercase w-28 focus:outline-none focus:border-yellow-300" />
-                  <button type="button" id="btnJoinByCode" class="px-2.5 py-0.5 bg-[#fef08a] text-[#05168b] font-bold text-xs hover:bg-white">ВОЙТИ</button>
+                <div class="flex items-center gap-2">
+                  <span>СТАТУС:</span>
+                  <span id="fbConnectionStatus" class="font-bold text-amber-300">🟡 CONNECTING</span>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-blue-200/80">
+                  <span>UID: <strong id="onlineUidJoinLabel" class="text-white">br_player_...</strong></span>
+                  <span id="onlinePingJoinLabel" class="text-emerald-300">-- ms</span>
                 </div>
               </div>
-              <div class="text-blue-200/80 mb-1 flex items-center justify-between">
-                <span>АКТИВНЫЕ ОНЛАЙН-КОМНАТЫ (FIREBASE):</span>
-                <span id="fbConnectionStatus" class="text-[10px] text-emerald-300">● ОНЛАЙН ГОТОВ</span>
+
+              <div class="crt-box flex flex-wrap items-center justify-between gap-2">
+                <span>НИКНЕЙМ ИГРОКА:</span>
+                <input id="inputJoinPlayerName" type="text" maxlength="16" placeholder="Stalker123" class="bg-[#020942] border border-blue-200/60 text-white px-2 py-0.5 font-mono text-xs w-40 focus:outline-none focus:border-yellow-300" />
+              </div>
+
+              <div class="crt-box flex flex-wrap items-center justify-between gap-2">
+                <span>КОД КОМНАТЫ:</span>
+                <div class="flex items-center gap-1.5">
+                  <input id="inputJoinRoomCode" type="text" maxlength="12" placeholder="BR-4821" class="bg-[#020942] border border-blue-200/60 text-white px-2 py-0.5 font-mono text-xs uppercase w-28 focus:outline-none focus:border-yellow-300" />
+                  <button type="button" id="btnJoinByCode" class="px-2.5 py-0.5 bg-[#fef08a] text-[#05168b] font-bold text-xs hover:bg-white">[ ПОДКЛЮЧИТЬСЯ ]</button>
+                </div>
+              </div>
+
+              <div id="onlineJoinErrorBox" class="hidden crt-box border-red-400 bg-red-950/70 text-red-200 text-[11px]"></div>
+
+              <div class="text-blue-200/80 mb-0.5 flex items-center justify-between text-[11px]">
+                <span>АКТИВНЫЕ КОМНАТЫ (ЖИВЫЕ СЕССИИ):</span>
+                <button type="button" id="btnRefreshRoomsList" class="underline text-yellow-200 hover:text-white">ОБНОВИТЬ</button>
               </div>
               <div id="firebaseRoomsList" class="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-                <div class="crt-box flex items-center justify-between">
-                  <div>
-                    <div class="font-bold text-white">ЛОББИ #KV-31 [ОТКРЫТАЯ СЕССИЯ]</div>
-                    <div class="text-[11px] text-blue-200/75">Нажмите ВХОД для быстрого подключения к общей комнате</div>
-                  </div>
-                  <button type="button" id="btnConnectServer1" class="px-2.5 py-1 bg-white text-[#05168b] font-bold text-xs hover:bg-blue-100">ВХОД</button>
-                </div>
+                <div class="crt-box text-[11px] text-blue-200/75">Загрузка активных комнат из Firebase...</div>
               </div>
             </div>
-            <button type="button" data-back="main" class="crt-menu-btn mt-2">
-              <span>&lt; НАЗАД В МЕНЮ</span>
-            </button>
+            <div class="flex items-center justify-between gap-2 mt-2">
+              <button type="button" data-back="main" class="crt-menu-btn">
+                <span>&lt; НАЗАД В МЕНЮ</span>
+              </button>
+              <button type="button" id="btnGoToLobbyFromJoin" class="crt-menu-btn text-right justify-end">
+                <span>[ СОЗДАТЬ КОМНАТУ ] &gt;</span>
+              </button>
+            </div>
           </div>
 
-          <!-- ПОДМЕНЮ: СОЗДАТЬ ОНЛАЙН-ЛОББИ (FIREBASE) -->
+          <!-- ПОДМЕНЮ: ОНЛАЙН-МЕНЮ И УПРАВЛЕНИЕ КОМНАТОЙ (HOST / LOBBY) -->
           <div id="menuViewLobby" class="crt-subview">
             <div class="space-y-1.5 text-xs sm:text-sm">
-              <div class="crt-box flex items-center justify-between gap-2">
-                <span>ВАШ ПОЗЫВНОЙ:</span>
-                <input id="inputHostPlayerName" type="text" maxlength="14" value="HAZMAT-HOST" class="bg-[#020942] border border-blue-200/60 text-white px-2 py-0.5 font-mono text-xs uppercase w-36 focus:outline-none focus:border-yellow-300" />
+              <div class="crt-box grid grid-cols-2 gap-1 text-[11px] sm:text-xs">
+                <div>Статус: <strong id="lobbyOnlineStatusText" class="text-amber-300">🟡 CONNECTING</strong></div>
+                <div>Игроков: <strong id="lobbyPlayerCountText" class="text-white">0/4</strong></div>
+                <div>Комната: <strong id="lobbyCodeDisplay" class="text-yellow-300 tracking-wider">НЕ СОЗДАНА</strong></div>
+                <div>HOST: <strong id="lobbyHostNameText" class="text-emerald-300">—</strong></div>
               </div>
-              <div class="crt-box flex items-center justify-between">
-                <span>КОД ОНЛАЙН-КОМНАТЫ:</span>
-                <span id="lobbyCodeDisplay" class="font-bold text-yellow-300 tracking-widest">ASYNC-8942</span>
+
+              <div class="crt-box flex flex-wrap items-center justify-between gap-2">
+                <span>ВАШ НИК:</span>
+                <div class="flex items-center gap-1.5">
+                  <input id="inputHostPlayerName" type="text" maxlength="16" placeholder="Stalker123" class="bg-[#020942] border border-blue-200/60 text-white px-2 py-0.5 font-mono text-xs w-36 focus:outline-none focus:border-yellow-300" />
+                  <button type="button" id="btnToggleLobbyLevel" class="px-2 py-0.5 bg-white text-[#05168b] font-bold text-[11px]">УРОВЕНЬ 0</button>
+                </div>
               </div>
-              <div class="crt-box flex items-center justify-between">
-                <span>СТАРТОВЫЙ УРОВЕНЬ:</span>
-                <button type="button" id="btnToggleLobbyLevel" class="px-2 py-0.5 bg-white text-[#05168b] font-bold">УРОВЕНЬ 0 (ЛАБИРИНТ)</button>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <button type="button" id="btnCreateRoomAction" class="px-2 py-1 bg-[#fef08a] text-[#05168b] font-bold text-[10px] sm:text-xs hover:bg-white uppercase text-center">
+                  [ СОЗДАТЬ КОМНАТУ ]
+                </button>
+                <button type="button" id="btnOpenJoinFromLobby" class="px-2 py-1 bg-white text-[#05168b] font-bold text-[10px] sm:text-xs hover:bg-blue-100 uppercase text-center">
+                  [ ПОДКЛЮЧИТЬСЯ ]
+                </button>
+                <button type="button" id="btnCopyRoomCode" class="px-2 py-1 bg-white text-[#05168b] font-bold text-[10px] sm:text-xs hover:bg-blue-100 uppercase text-center">
+                  [ СКОПИРОВАТЬ КОД ]
+                </button>
+                <button type="button" id="btnLeaveRoomAction" class="px-2 py-1 bg-red-500/90 text-white font-bold text-[10px] sm:text-xs hover:bg-red-400 uppercase text-center">
+                  [ ВЫЙТИ ИЗ КОМНАТЫ ]
+                </button>
               </div>
-              <div class="crt-box flex items-center justify-between">
-                <span>НАПАРНИК HAZMAT (ИИ-БОТ):</span>
-                <button type="button" id="btnTogglePartner" class="px-2 py-0.5 bg-white text-[#05168b] font-bold">ВЫКЛЮЧЕН</button>
+
+              <div id="lobbyErrorBanner" class="hidden crt-box border-red-400 bg-red-950/70 text-red-200 text-[11px]"></div>
+
+              <div class="crt-box">
+                <div class="flex items-center justify-between text-[11px] text-blue-200/80 mb-1">
+                  <span>СПИСОК ИГРОКОВ В КОМНАТЕ:</span>
+                  <span id="lobbyRoomStateBadge" class="text-yellow-300 font-bold">СТАТУС: ОЖИДАНИЕ</span>
+                </div>
+                <div id="lobbyPlayersListContainer" class="space-y-0.5 text-xs max-h-20 overflow-y-auto">
+                  <div class="text-blue-200/65 text-[11px]">Вы пока не находитесь в комнате. Нажмите [ СОЗДАТЬ КОМНАТУ ] или [ ПОДКЛЮЧИТЬСЯ ].</div>
+                </div>
               </div>
-              <div class="crt-box flex items-center justify-between">
-                <span>АГРЕССИЯ МОНСТРОВ:</span>
-                <button type="button" id="btnToggleDifficulty" class="px-2 py-0.5 bg-white text-[#05168b] font-bold">ШТАТНАЯ</button>
-              </div>
-              <div id="lobbyPlayersOnlineBox" class="text-[11px] text-emerald-300 px-1">
-                Статус: Нажмите «СОЗДАТЬ И ЗАПУСТИТЬ ОНЛАЙН-ЛОББИ», чтобы открыть комнату в Firebase
+
+              <div class="hidden">
+                <button type="button" id="btnTogglePartner">ВЫКЛЮЧЕН</button>
+                <button type="button" id="btnToggleDifficulty">ШТАТНАЯ</button>
               </div>
             </div>
+
             <div class="flex flex-col gap-1 mt-1.5">
               <button type="button" id="btnStartCoopLobby" class="crt-menu-btn selected-item">
-                <span>СОЗДАТЬ И ЗАПУСТИТЬ ОНЛАЙН-ЛОББИ &gt;</span>
+                <span id="btnStartCoopLobbyLabel">[ НАЧАТЬ ИГРУ ] &gt;</span>
+                <span class="text-xs opacity-70" id="btnStartCoopLobbyHint">[HOST START]</span>
               </button>
               <button type="button" data-back="main" class="crt-menu-btn">
                 <span>&lt; НАЗАД В МЕНЮ</span>
@@ -2811,6 +2850,24 @@
 
     function updateBacteriaAnimationAndAI(t, dt, playerPos) {
       if (!bacteriaSkeleton.pelvis) return;
+
+      // Если игрок в онлайн-комнате и НЕ является HOST, положение и анимация Бактерии синхронизируются от HOST (world authority)
+      if (window.BackroomsOnlineManager && window.BackroomsOnlineManager.isNonHostInActiveRoom()) {
+        window.BackroomsOnlineManager.applySyncedMonsters(t, dt);
+        const cdx = playerPos.x - bacteriaRoot.position.x;
+        const cdz = playerPos.z - bacteriaRoot.position.z;
+        const cdist = Math.hypot(cdx, cdz);
+        const dangerOverlay = document.getElementById('dangerVignette');
+        if (cdist < 15 && !menuOpen && !isJumpscareActive && !isPlayerHiddenFromMonster) {
+          dangerOverlay.style.opacity = String(Math.min(0.85, (15 - cdist) / 11));
+        } else if (!isJumpscareActive) {
+          dangerOverlay.style.opacity = '0';
+        }
+        if (cdist <= 1.55 && !isPlayerHiddenFromMonster && !menuOpen && !isJumpscareActive) {
+          triggerJumpscareOneShot();
+        }
+        return;
+      }
 
       const dx = playerPos.x - bacteriaRoot.position.x;
       const dz = playerPos.z - bacteriaRoot.position.z;
@@ -5063,6 +5120,9 @@
           sound.playMechanismSound('creak');
           fb.handleTargetRad = 0;
         }, 120);
+        if (window.BackroomsOnlineManager) {
+          window.BackroomsOnlineManager.emitGameEvent('door_open', { target: 'fusebox', level: currentLevel, angle: 108 });
+        }
         return;
       }
 
@@ -5125,7 +5185,10 @@
         elev.openTarget = 1;
         sound.playMechanismSound('elevator_ding', 1.0);
         setTimeout(() => sound.playMechanismSound('creak', 0.8), 240);
-        if (window.backroomsNet) window.backroomsNet.syncWorldEvent();
+        if (window.BackroomsOnlineManager) {
+          window.BackroomsOnlineManager.emitGameEvent('elevator_called', { level: currentLevel });
+          window.BackroomsOnlineManager.emitGameEvent('elevator_open', { level: currentLevel });
+        }
         return;
       }
 
@@ -5133,6 +5196,9 @@
       elev.transitioning = true;
       elev.openTarget = 0;
       sound.playMechanismSound('latch', 0.9);
+      if (window.BackroomsOnlineManager) {
+        window.BackroomsOnlineManager.emitGameEvent('elevator_close', { level: currentLevel, nextLevel: currentLevel === 0 ? 1 : 0 });
+      }
 
       if (currentLevel === 0) {
         showCharacterThought('«Двери закрываются... Лифт спускается на Уровень 1 (Обитаемая зона).»', 3400);
@@ -5281,7 +5347,16 @@
             }
             ctrl.active = false;
             refreshInventoryUI();
-            if (window.backroomsNet) window.backroomsNet.syncWorldEvent();
+            if (window.BackroomsOnlineManager) {
+              window.BackroomsOnlineManager.emitGameEvent('fuse_inserted', {
+                level: currentLevel,
+                slotIdx: ctrl.slotIdx,
+                installedTotal: instTotal
+              });
+              if (instTotal >= 4) {
+                window.BackroomsOnlineManager.emitGameEvent('power_on', { level: currentLevel });
+              }
+            }
           }
         }
       }
@@ -5487,9 +5562,18 @@
         if (soundDecoy.timer <= 0) soundDecoy.active = false;
       }
 
-      // Если мы в онлайн-комнате и НЕ являемся хостом, позиции монстров синхронизируются от хоста через Firebase
-      if (window.backroomsNet && window.backroomsNet.isClientInRoom()) {
-        window.backroomsNet.applySyncedMonstersL1(elapsed, dt);
+      // Если мы в онлайн-комнате и НЕ являемся HOST, позиции монстров синхронизируются от HOST (world authority)
+      if (window.BackroomsOnlineManager && window.BackroomsOnlineManager.isNonHostInActiveRoom()) {
+        window.BackroomsOnlineManager.applySyncedMonsters(elapsed, dt);
+        for (let i = 0; i < l1Entities.length; i++) {
+          const ent = l1Entities[i];
+          const d = Math.hypot(playerPos.x - ent.root.position.x, playerPos.z - ent.root.position.z);
+          if (!isPlayerHiddenFromMonster && exitHideGraceTimer <= 0 && d <= 1.62 && (ent.state === 'CHASE' || ent.state === 'ATTACK')) {
+            activeJumpscareEntity = ent;
+            triggerJumpscareOneShot();
+            break;
+          }
+        }
         return;
       }
 
@@ -5716,7 +5800,10 @@
       playerInventory.fuse = (playerInventory.fuse || 0) + 1;
       sound.playUiBeep(720, 0.05);
       refreshInventoryUI();
-      if (window.backroomsNet) window.backroomsNet.syncWorldEvent();
+      if (window.BackroomsOnlineManager) {
+        const fuseIdx = worldLooseFuses.indexOf(lf);
+        window.BackroomsOnlineManager.emitGameEvent('fuse_collected', { fuseIdx, level: currentLevel });
+      }
     }
 
     function findNearestCrateL1() {
@@ -5747,10 +5834,14 @@
 
     function interactWithCrateL1(cr) {
       if (!cr || cr.isLooted) return;
+      const crateIdx = l1Crates.indexOf(cr);
       if (!cr.isOpen) {
         cr.isOpen = true;
         cr.lidTargetRad = -Math.PI * 0.58;
         sound.playMechanismSound('crate_open', 1.0);
+        if (window.BackroomsOnlineManager) {
+          window.BackroomsOnlineManager.emitGameEvent('door_open', { target: 'crate', crateIdx, isOpen: true, isLooted: false });
+        }
       } else {
         cr.isLooted = true;
         if (cr.itemMesh) cr.itemMesh.visible = false;
@@ -5758,8 +5849,10 @@
         playerInventory[itemKey] = (playerInventory[itemKey] || 0) + 1;
         sound.playUiBeep(680, 0.05);
         refreshInventoryUI();
+        if (window.BackroomsOnlineManager) {
+          window.BackroomsOnlineManager.emitGameEvent('door_close', { target: 'crate_looted', crateIdx, isOpen: true, isLooted: true });
+        }
       }
-      if (window.backroomsNet) window.backroomsNet.syncWorldEvent();
     }
 
     function refreshInventoryUI() {
@@ -5850,6 +5943,9 @@
         scene.fog.density = 0.035;
       }
       refreshInventoryUI();
+      if (window.BackroomsOnlineManager && window.BackroomsOnlineManager.currentRoomId) {
+        window.BackroomsOnlineManager.onLocalLevelChanged(currentLevel);
+      }
     }
     window.loadLevel = loadLevel;
     window.setGameLevel = loadLevel;
@@ -5964,10 +6060,13 @@
       loadLevel(1);
       startGameSession(false, 'ОДИНОЧНАЯ ИГРА: УРОВЕНЬ 1');
     });
-    document.getElementById('btnJoinGame').addEventListener('click', () => switchMenuSubview('join'));
+    document.getElementById('btnJoinGame').addEventListener('click', () => {
+      switchMenuSubview('join');
+      if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.refreshRoomListUI();
+    });
     document.getElementById('btnCreateLobby').addEventListener('click', () => {
-      document.getElementById('lobbyCodeDisplay').textContent = 'ASYNC-' + Math.floor(1000 + Math.random() * 9000);
       switchMenuSubview('lobby');
+      if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.updateMenuUI();
     });
     document.getElementById('btnOpenSettings').addEventListener('click', () => switchMenuSubview('settings'));
 
@@ -5977,42 +6076,80 @@
       btnToggleLobbyLevel.addEventListener('click', (e) => {
         sound.playUiBeep();
         selectedLobbyStartLevel = selectedLobbyStartLevel === 0 ? 1 : 0;
-        e.currentTarget.textContent = selectedLobbyStartLevel === 1
-          ? 'УРОВЕНЬ 1 (ОБИТАЕМАЯ ЗОНА)'
-          : 'УРОВЕНЬ 0 (ЛАБИРИНТ)';
+        e.currentTarget.textContent = selectedLobbyStartLevel === 1 ? 'УРОВЕНЬ 1' : 'УРОВЕНЬ 0';
+        if (window.BackroomsOnlineManager) {
+          window.BackroomsOnlineManager.setLobbyLevel(selectedLobbyStartLevel);
+        }
       });
     }
 
-    document.getElementById('btnConnectServer1').addEventListener('click', () => {
-      if (window.backroomsNet) {
-        const nameVal = document.getElementById('inputJoinPlayerName')?.value || 'HAZMAT';
-        window.backroomsNet.joinRoom('ASYNC-KV31', nameVal);
-      } else {
-        startGameSession(true, 'КООПЕРАТИВ: ЛОББИ #KV-31');
-      }
-    });
+    const btnGoToLobbyFromJoin = document.getElementById('btnGoToLobbyFromJoin');
+    if (btnGoToLobbyFromJoin) {
+      btnGoToLobbyFromJoin.addEventListener('click', () => {
+        switchMenuSubview('lobby');
+        if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.createRoomFromUI();
+      });
+    }
+
+    const btnOpenJoinFromLobby = document.getElementById('btnOpenJoinFromLobby');
+    if (btnOpenJoinFromLobby) {
+      btnOpenJoinFromLobby.addEventListener('click', () => {
+        switchMenuSubview('join');
+        if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.refreshRoomListUI();
+      });
+    }
+
+    const btnCreateRoomAction = document.getElementById('btnCreateRoomAction');
+    if (btnCreateRoomAction) {
+      btnCreateRoomAction.addEventListener('click', () => {
+        sound.playUiBeep(640, 0.05);
+        if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.createRoomFromUI();
+      });
+    }
+
+    const btnCopyRoomCode = document.getElementById('btnCopyRoomCode');
+    if (btnCopyRoomCode) {
+      btnCopyRoomCode.addEventListener('click', () => {
+        sound.playUiBeep(680, 0.05);
+        if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.copyRoomCode();
+      });
+    }
+
+    const btnLeaveRoomAction = document.getElementById('btnLeaveRoomAction');
+    if (btnLeaveRoomAction) {
+      btnLeaveRoomAction.addEventListener('click', () => {
+        sound.playUiBeep(420, 0.06);
+        if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.leaveRoom(true);
+      });
+    }
+
+    const btnRefreshRoomsList = document.getElementById('btnRefreshRoomsList');
+    if (btnRefreshRoomsList) {
+      btnRefreshRoomsList.addEventListener('click', () => {
+        sound.playUiBeep(560, 0.04);
+        if (window.BackroomsOnlineManager) window.BackroomsOnlineManager.refreshRoomListUI();
+      });
+    }
 
     const btnJoinByCode = document.getElementById('btnJoinByCode');
     if (btnJoinByCode) {
       btnJoinByCode.addEventListener('click', () => {
-        const codeInput = document.getElementById('inputJoinRoomCode')?.value?.trim().toUpperCase() || 'ASYNC-KV31';
-        const nameVal = document.getElementById('inputJoinPlayerName')?.value?.trim() || 'HAZMAT';
-        if (window.backroomsNet) {
-          window.backroomsNet.joinRoom(codeInput, nameVal);
-        } else {
-          startGameSession(true, 'КООПЕРАТИВ: ' + codeInput);
+        sound.playUiBeep(620, 0.05);
+        const codeInput = document.getElementById('inputJoinRoomCode')?.value || '';
+        const nameVal = document.getElementById('inputJoinPlayerName')?.value || '';
+        if (window.BackroomsOnlineManager) {
+          window.BackroomsOnlineManager.joinRoomByCode(codeInput, nameVal);
         }
       });
     }
 
     document.getElementById('btnStartCoopLobby').addEventListener('click', () => {
-      const codeText = document.getElementById('lobbyCodeDisplay')?.textContent?.trim() || 'ASYNC-8942';
-      const nameVal = document.getElementById('inputHostPlayerName')?.value?.trim() || 'HAZMAT-HOST';
-      loadLevel(selectedLobbyStartLevel);
-      if (window.backroomsNet) {
-        window.backroomsNet.hostRoom(codeText, nameVal, selectedLobbyStartLevel);
+      sound.playUiBeep(720, 0.06);
+      if (window.BackroomsOnlineManager) {
+        window.BackroomsOnlineManager.startGameFromLobbyButton(selectedLobbyStartLevel);
       } else {
-        startGameSession(partnerEnabled, 'ОНЛАЙН-ЛОББИ: ' + codeText);
+        loadLevel(selectedLobbyStartLevel);
+        startGameSession(partnerEnabled, 'ОДИНОЧНАЯ СЕССИЯ');
       }
     });
 
@@ -6726,8 +6863,8 @@
       const ss = String(diff % 60).padStart(2, '0');
       document.getElementById('timecode').textContent = `${hh}:${mm}:${ss}`;
 
-      if (window.backroomsNet) {
-        window.backroomsNet.tick(elapsed, dt, currentAnimMode);
+      if (window.BackroomsOnlineManager) {
+        window.BackroomsOnlineManager.updateFrame(elapsed, dt, currentAnimMode);
       }
       renderer.render(scene, camera);
     }
@@ -6738,15 +6875,14 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-
-    // Экспортируем необходимые объекты для модуля мультиплеера Firebase
+    // Мост между 3D-движком Backrooms и единым менеджером мультиплеера window.BackroomsOnlineManager
     window.__backroomsGame = {
       scene,
       createExplorerRig,
       animateExplorerRig,
       getPlayerState: () => ({
         x: Number(playerPos.x.toFixed(3)),
-        y: Number(playerPos.y.toFixed(3)),
+        y: Number((currentEyeY - EYE_STAND).toFixed(3)),
         z: Number(playerPos.z.toFixed(3)),
         yaw: Number(yaw.toFixed(3)),
         pitch: Number(pitch.toFixed(3)),
@@ -6757,9 +6893,12 @@
         hidden: Boolean(hiddenInCabinet || isInsideWallHole)
       }),
       getCurrentLevel: () => currentLevel,
-      loadLevel,
+      loadLevel: (lvl, sx, sz) => loadLevel(lvl, sx, sz),
       startGameSession: (coop, lbl) => startGameSession(coop, lbl),
+      switchMenuSubview: (sub) => switchMenuSubview(sub),
+      isMenuOpen: () => menuOpen,
       showCharacterThought,
+      sound,
       worldLooseFuses,
       levelFuseBoxes,
       levelElevators,
@@ -6774,34 +6913,78 @@
       getMonstersState: () => ({
         b0: {
           x: Number(bacteriaRoot.position.x.toFixed(2)),
+          y: Number(bacteriaRoot.position.y.toFixed(2)),
           z: Number(bacteriaRoot.position.z.toFixed(2)),
-          ry: Number(bacteriaRoot.rotation.y.toFixed(2)),
-          st: bacteriaState
+          ry: Number(bacteriaRoot.rotation.y.toFixed(3)),
+          st: bacteriaState,
+          anim: bacteriaState === 'chase' ? 'chase' : 'idle',
+          targetX: Number(bacteriaLastSeenPos.wx.toFixed(2)),
+          targetZ: Number(bacteriaLastSeenPos.wz.toFixed(2))
         },
         e1: l1Entities.map(e => ({
           id: e.id,
           x: Number(e.root.position.x.toFixed(2)),
           z: Number(e.root.position.z.toFixed(2)),
-          ry: Number((e.root.rotation.y || 0).toFixed(2)),
+          ry: Number((e.root.rotation.y || 0).toFixed(3)),
           st: e.state
         }))
       }),
       applyMonstersState: (mData, elapsed, dt) => {
         if (!mData) return;
+        // Плавная интерполяция Бактерии на Уровне 0 от HOST
         if (mData.b0 && currentLevel === 0) {
-          bacteriaRoot.position.x += (mData.b0.x - bacteriaRoot.position.x) * Math.min(1, dt * 10);
-          bacteriaRoot.position.z += (mData.b0.z - bacteriaRoot.position.z) * Math.min(1, dt * 10);
-          bacteriaRoot.rotation.y = mData.b0.ry || 0;
-          bacteriaState = mData.b0.st || 'chase';
+          const b0 = mData.b0;
+          const distJump = Math.hypot(b0.x - bacteriaRoot.position.x, b0.z - bacteriaRoot.position.z);
+          if (distJump > 12) {
+            bacteriaRoot.position.set(b0.x, 0, b0.z);
+          } else {
+            bacteriaRoot.position.x += (b0.x - bacteriaRoot.position.x) * Math.min(1, dt * 11);
+            bacteriaRoot.position.z += (b0.z - bacteriaRoot.position.z) * Math.min(1, dt * 11);
+          }
+          const targetRy = typeof b0.ry === 'number' ? b0.ry : 0;
+          const diffRy = Math.atan2(Math.sin(targetRy - bacteriaRoot.rotation.y), Math.cos(targetRy - bacteriaRoot.rotation.y));
+          bacteriaRoot.rotation.y += diffRy * Math.min(1, dt * 11);
+          bacteriaState = b0.st || 'chase';
+
+          if (bacteriaSkeleton.pelvis) {
+            if (bacteriaState === 'idle') {
+              const breath = Math.sin(elapsed * 2.1);
+              bacteriaSkeleton.pelvis.position.set(Math.sin(elapsed * 0.9) * 0.025, 1.37 + breath * 0.015, 0);
+              bacteriaSkeleton.torso.rotation.set(0.14 + breath * 0.03, Math.sin(elapsed * 1.1) * 0.06, 0);
+            } else {
+              const cycle = elapsed * 10.2;
+              const s = Math.sin(cycle), c = Math.cos(cycle);
+              bacteriaSkeleton.pelvis.position.set(c * 0.07, 1.34 + Math.abs(s) * 0.09, 0);
+              bacteriaSkeleton.pelvis.rotation.set(0.18, s * 0.18, c * 0.08);
+              bacteriaSkeleton.torso.rotation.set(0.32 + Math.abs(c) * 0.08, -s * 0.22, -c * 0.12);
+              bacteriaSkeleton.head.rotation.set(-0.15 + Math.sin(elapsed * 27) * 0.18, Math.cos(elapsed * 17) * 0.25, -0.18);
+              bacteriaSkeleton.leftArm.rotation.set(-0.65 + c * 0.75, 0, 0.22);
+              bacteriaSkeleton.leftForearm.rotation.set(-0.55 + s * 0.35, 0, 0);
+              bacteriaSkeleton.rightArm.rotation.set(-0.65 - c * 0.75, 0, -0.22);
+              bacteriaSkeleton.rightForearm.rotation.set(-0.55 - s * 0.35, 0, 0);
+              bacteriaSkeleton.leftLeg.rotation.x = s * 0.65 - 0.15;
+              bacteriaSkeleton.leftShin.rotation.x = Math.max(0, -c * 0.85) + 0.15;
+              bacteriaSkeleton.rightLeg.rotation.x = -s * 0.65 - 0.15;
+              bacteriaSkeleton.rightShin.rotation.x = Math.max(0, c * 0.85) + 0.15;
+            }
+          }
         }
+        // Плавная интерполяция Гончей и Кожекрада на Уровне 1 от HOST
         if (Array.isArray(mData.e1) && currentLevel === 1) {
           mData.e1.forEach(rem => {
             const ent = l1Entities.find(e => e.id === rem.id);
             if (!ent) return;
             const prevX = ent.root.position.x, prevZ = ent.root.position.z;
-            ent.root.position.x += (rem.x - ent.root.position.x) * Math.min(1, dt * 10);
-            ent.root.position.z += (rem.z - ent.root.position.z) * Math.min(1, dt * 10);
-            ent.root.rotation.y = rem.ry || 0;
+            const dJump = Math.hypot(rem.x - prevX, rem.z - prevZ);
+            if (dJump > 12) {
+              ent.root.position.set(rem.x, 0, rem.z);
+            } else {
+              ent.root.position.x += (rem.x - prevX) * Math.min(1, dt * 11);
+              ent.root.position.z += (rem.z - prevZ) * Math.min(1, dt * 11);
+            }
+            const targetRy = rem.ry || 0;
+            const diffRy = Math.atan2(Math.sin(targetRy - ent.root.rotation.y), Math.cos(targetRy - ent.root.rotation.y));
+            ent.root.rotation.y += diffRy * Math.min(1, dt * 11);
             ent.state = rem.st || 'PATROL';
             const moved = Math.hypot(ent.root.position.x - prevX, ent.root.position.z - prevZ) > 0.002;
             if (ent.kind === 'hound') {
@@ -6822,7 +7005,7 @@
     };
   </script>
 
-  <!-- ==================== ОНЛАЙН-МУЛЬТИПЛЕЕР ЧЕРЕЗ FIREBASE REALTIME DATABASE ==================== -->
+  <!-- ==================== ЕДИНЫЙ МЕНЕДЖЕР МУЛЬТИПЛЕЕРА: window.BackroomsOnlineManager ==================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -6833,10 +7016,19 @@
       onValue,
       onDisconnect,
       remove,
-      get
+      get,
+      runTransaction
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    // Конфигурация Firebase пользователя
+    // Константы сетевой архитектуры
+    const MAX_ROOM_PLAYERS = 4;
+    const HEARTBEAT_INTERVAL_MS = 3000;
+    const PLAYER_TIMEOUT_MS = 10000;
+    const ONLINE_SYNC_INTERVAL_MS = 65;
+    const ROOM_ACTIVE_TTL_MS = 45000;
+    const TELEPORT_SNAP_DIST = 10.0;
+
+    // 1. Сохраненная рабочая конфигурация Firebase пользователя (blackrooms-1bc41)
     const firebaseConfig = {
       apiKey: "AIzaSyBGHh-Q53rZqACtydlhja2bo2DalKmCP4Y",
       authDomain: "blackrooms-1bc41.firebaseapp.com",
@@ -6847,215 +7039,1362 @@
       appId: "1:306355002026:web:1bf1ec92848ff1f8c3ced3"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const localPlayerId = "p_" + Math.random().toString(36).substring(2, 9) + "_" + (Date.now() % 10000);
-    const randSuffix = Math.floor(10 + Math.random() * 89);
-    const joinNameInput = document.getElementById("inputJoinPlayerName");
-    const hostNameInput = document.getElementById("inputHostPlayerName");
-    if (joinNameInput) joinNameInput.value = `HAZMAT-${randSuffix}`;
-    if (hostNameInput) hostNameInput.value = `HAZMAT-${randSuffix}`;
-
-    let activeRoomCode = null;
-    let isRoomHost = false;
-    let localPlayerName = `HAZMAT-${randSuffix}`;
-    let lastNetSendTime = 0;
-    let unsubscribeRoomPlayers = null;
-    let unsubscribeRoomWorld = null;
-    let unsubscribeRoomMonsters = null;
-    let latestSyncedMonsters = null;
-
-    // 3D-аватары других онлайн-игроков: Map<playerId, { rig, nameSprite, targetPos, targetYaw, level, anim, crouching, flashlightSpot, lastSeen }>
-    const remotePlayers = new Map();
-
-    function createPlayerNameSprite(nameText) {
-      const c = document.createElement("canvas");
-      c.width = 256;
-      c.height = 64;
-      const ctx = c.getContext("2d");
-      ctx.fillStyle = "rgba(8, 12, 24, 0.78)";
-      ctx.fillRect(12, 10, 232, 44);
-      ctx.strokeStyle = "#facc15";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(12, 10, 232, 44);
-      ctx.fillStyle = "#fef08a";
-      ctx.font = "bold 22px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText(String(nameText || "HAZMAT").slice(0, 14), 128, 39);
-      const tex = new THREE.CanvasTexture(c);
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
-      const sprite = new THREE.Sprite(mat);
-      sprite.scale.set(1.25, 0.31, 1);
-      sprite.position.set(0, 2.08, 0);
-      return sprite;
-    }
-
-    function getOrCreateRemotePlayer(pid, data) {
-      const g = window.__backroomsGame;
-      if (!g) return null;
-      if (remotePlayers.has(pid)) {
-        const existing = remotePlayers.get(pid);
-        if (data.name && data.name !== existing.name) {
-          existing.name = data.name;
-          existing.rig.root.remove(existing.nameSprite);
-          existing.nameSprite = createPlayerNameSprite(data.name);
-          existing.rig.root.add(existing.nameSprite);
+    // 2. Уникальный UID с защитой от конфликта вкладок одного браузера (sessionStorage для вкладки + localStorage для профиля)
+    function initTabSafePlayerUid() {
+      try {
+        let tabUid = sessionStorage.getItem("br_tab_player_uid");
+        if (!tabUid || !tabUid.startsWith("br_player_")) {
+          const randPart = Math.random().toString(36).substring(2, 7) + Math.floor(10 + Math.random() * 89);
+          tabUid = `br_player_${randPart}`;
+          sessionStorage.setItem("br_tab_player_uid", tabUid);
         }
-        return existing;
-      }
-
-      const rig = g.createExplorerRig();
-      const nameSprite = createPlayerNameSprite(data.name || "HAZMAT");
-      rig.root.add(nameSprite);
-
-      // Добавляем 3D-луч фонарика для напарника по сети
-      const peerSpot = new THREE.SpotLight(0xfffbe6, 2.6, 26, Math.PI / 5.5, 0.5, 1.4);
-      peerSpot.position.set(0, 1.38, 0.22);
-      const peerTarget = new THREE.Object3D();
-      peerTarget.position.set(0, 1.25, 8.0);
-      rig.root.add(peerSpot);
-      rig.root.add(peerTarget);
-      peerSpot.target = peerTarget;
-
-      rig.root.position.set(data.x || 1.8, 0, data.z || 1.8);
-      g.scene.add(rig.root);
-
-      const rp = {
-        id: pid,
-        name: data.name || "HAZMAT",
-        rig,
-        nameSprite,
-        peerSpot,
-        targetX: data.x || 1.8,
-        targetZ: data.z || 1.8,
-        targetYaw: data.yaw || 0,
-        level: Number(data.level || 0),
-        anim: data.anim || "idle",
-        crouching: Boolean(data.crouching),
-        hidden: Boolean(data.hidden),
-        lastSeen: Date.now()
-      };
-      remotePlayers.set(pid, rp);
-      return rp;
-    }
-
-    function removeRemotePlayer(pid) {
-      const g = window.__backroomsGame;
-      const rp = remotePlayers.get(pid);
-      if (!rp) return;
-      if (g && rp.rig && rp.rig.root) {
-        g.scene.remove(rp.rig.root);
-      }
-      remotePlayers.delete(pid);
-    }
-
-    function updateOnlineHudBadge() {
-      const badge = document.getElementById("hudOnlineBadge");
-      const txt = document.getElementById("hudOnlineText");
-      if (!badge || !txt) return;
-      if (!activeRoomCode) {
-        badge.classList.add("hidden");
-        badge.classList.remove("flex");
-      } else {
-        badge.classList.remove("hidden");
-        badge.classList.add("flex");
-        const totalPlayers = 1 + remotePlayers.size;
-        txt.textContent = `${activeRoomCode} • ИГРОКОВ: ${totalPlayers}`;
+        localStorage.setItem("br_last_player_uid", tabUid);
+        return tabUid;
+      } catch (err) {
+        return "br_player_" + Math.random().toString(36).substring(2, 9);
       }
     }
 
-    function normalizeRoomCode(raw) {
-      const clean = String(raw || "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
-      if (!clean) return "ASYNC-KV31";
-      return clean.startsWith("ASYNC-") ? clean : `ASYNC-${clean}`;
+    function loadSavedNickname(uid) {
+      try {
+        const saved = localStorage.getItem("br_player_nickname");
+        if (saved && saved.trim()) return saved.trim().slice(0, 16);
+      } catch (err) {
+        console.warn("[BACKROOMS ONLINE] [Player] Не удалось прочитать ник из localStorage:", err);
+      }
+      const suffix = uid.slice(-4).toUpperCase();
+      return `Stalker_${suffix}`;
     }
 
-    function connectToFirebaseRoom(roomCode, playerName, asHost = false, initialLevel = 0) {
-      const g = window.__backroomsGame;
-      if (!g) return;
-
-      activeRoomCode = normalizeRoomCode(roomCode);
-      localPlayerName = (playerName || `HAZMAT-${randSuffix}`).trim().toUpperCase().slice(0, 14);
-      isRoomHost = Boolean(asHost);
-
-      // Очищаем старых удалённых игроков при смене комнаты
-      Array.from(remotePlayers.keys()).forEach(removeRemotePlayer);
-
-      const roomRef = ref(db, `rooms/${activeRoomCode}`);
-      const myPlayerRef = ref(db, `rooms/${activeRoomCode}/players/${localPlayerId}`);
-
-      const pState = g.getPlayerState();
-      set(myPlayerRef, {
-        name: localPlayerName,
-        x: pState.x,
-        z: pState.z,
-        yaw: pState.yaw,
-        level: pState.level,
-        anim: "idle",
-        crouching: false,
-        flashlight: true,
-        hidden: false,
-        updatedAt: Date.now()
-      }).catch(() => {});
-
-      onDisconnect(myPlayerRef).remove().catch(() => {});
-
-      if (asHost) {
-        update(ref(db, `rooms/${activeRoomCode}/meta`), {
-          hostId: localPlayerId,
-          hostName: localPlayerName,
-          level: initialLevel,
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        }).catch(() => {});
+    function saveNicknameToStorage(nick) {
+      try {
+        localStorage.setItem("br_player_nickname", nick);
+      } catch (err) {
+        console.warn("[BACKROOMS ONLINE] [Player] Не удалось сохранить ник в localStorage:", err);
       }
+    }
 
-      // Слушаем список игроков в комнате
-      if (unsubscribeRoomPlayers) unsubscribeRoomPlayers();
-      unsubscribeRoomPlayers = onValue(ref(db, `rooms/${activeRoomCode}/players`), (snapshot) => {
-        const val = snapshot.val() || {};
-        const seenIds = new Set();
-        let onlineNames = [];
+    // 3. Создание единого глобального объекта window.BackroomsOnlineManager
+    const BackroomsOnlineManager = {
+      app: null,
+      db: null,
+      uid: initTabSafePlayerUid(),
+      nickname: "",
+      currentRoomId: null,
+      roomId: null,
+      connectionStatus: "CONNECTING", // 'ONLINE' | 'CONNECTING' | 'OFFLINE' | 'ERROR'
+      lastErrorText: "",
+      pingMs: null,
 
-        Object.keys(val).forEach((pid) => {
-          const pData = val[pid];
-          if (!pData) return;
-          onlineNames.push(pData.name || pid);
-          if (pid === localPlayerId) return;
-          seenIds.add(pid);
-          const rp = getOrCreateRemotePlayer(pid, pData);
-          if (rp) {
-            rp.targetX = typeof pData.x === "number" ? pData.x : rp.targetX;
-            rp.targetZ = typeof pData.z === "number" ? pData.z : rp.targetZ;
-            rp.targetYaw = typeof pData.yaw === "number" ? pData.yaw : rp.targetYaw;
-            rp.level = Number(pData.level || 0);
-            rp.anim = pData.anim || "idle";
-            rp.crouching = Boolean(pData.crouching);
-            rp.hidden = Boolean(pData.hidden);
-            rp.peerSpot.intensity = pData.flashlight === false ? 0 : 2.6;
-            rp.lastSeen = Date.now();
+      // Метаданные комнаты и игроков
+      roomMeta: null,
+      roomPlayersMeta: new Map(), // uid -> player object from Firebase
+      remotePlayers: new Map(),   // uid -> 3D rig & interpolation state
+      activeRoomsCache: {},
+
+      // Интервалы и отписки слушателей
+      heartbeatTimerId: null,
+      syncTimerId: null,
+      timeoutSweepTimerId: null,
+      unsubscribeConnected: null,
+      unsubscribeRoomList: null,
+      unsubscribeRoomMeta: null,
+      unsubscribeRoomPlayers: null,
+      unsubscribeRoomWorld: null,
+      unsubscribeRoomEvents: null,
+      unsubscribeRoomMonsters: null,
+      activeDisconnectRef: null,
+
+      // Оптимизация трафика и состояние синхронизации
+      lastSentSnapshot: null,
+      lastSentTime: 0,
+      lastProcessedEventId: null,
+      latestSyncedMonsters: null,
+      isReconnectingRoom: false,
+      desiredLobbyLevel: 0,
+
+      // Единый обработчик сетевых ошибок для всех операций Firebase
+      handleNetworkError(error, context = "Firebase") {
+        const errCode = error?.code || error?.name || "NETWORK_ERROR";
+        const errMsg = error?.message || String(error);
+        console.error(`[BACKROOMS ONLINE] [${context}] Ошибка: ${errCode} — ${errMsg}`, error);
+
+        this.lastErrorText = `${errCode}: ${errMsg}`;
+        if (errCode === "PERMISSION_DENIED") {
+          this.setConnectionStatus("ERROR", "Отказано в доступе к базе данных (PERMISSION_DENIED).");
+        } else if (!navigator.onLine) {
+          this.setConnectionStatus("OFFLINE", "Отсутствует подключение к интернету.");
+        } else {
+          this.setConnectionStatus("ERROR", "Не удалось подключиться к серверу. Проверьте соединение.");
+        }
+
+        const g = window.__backroomsGame;
+        if (g && g.showCharacterThought) {
+          g.showCharacterThought(`«Не удалось подключиться к серверу (${context}). Проверьте соединение.»`, 4200);
+        }
+        this.showMenuError(`Не удалось выполнить операцию (${context}): ${errMsg}`);
+        this.updateMenuUI();
+      },
+
+      showMenuError(msg) {
+        const joinErr = document.getElementById("onlineJoinErrorBox");
+        const lobbyErr = document.getElementById("lobbyErrorBanner");
+        [joinErr, lobbyErr].forEach((el) => {
+          if (!el) return;
+          if (!msg) {
+            el.classList.add("hidden");
+            el.textContent = "";
+          } else {
+            el.textContent = `⚠️ ${msg}`;
+            el.classList.remove("hidden");
+          }
+        });
+      },
+
+      setConnectionStatus(status, customReason = "") {
+        const prevStatus = this.connectionStatus;
+        this.connectionStatus = status;
+        if (customReason) this.lastErrorText = customReason;
+        console.log(`[BACKROOMS ONLINE] [Firebase] Статус соединения: ${prevStatus} -> ${status}`, customReason || "");
+        this.updateMenuUI();
+        this.updateOnlineHudBadge();
+      },
+
+      init() {
+        this.nickname = loadSavedNickname(this.uid);
+        const joinInput = document.getElementById("inputJoinPlayerName");
+        const hostInput = document.getElementById("inputHostPlayerName");
+        const uidLabel = document.getElementById("onlineUidJoinLabel");
+        if (joinInput) {
+          joinInput.value = this.nickname;
+          joinInput.addEventListener("change", () => this.setNickname(joinInput.value));
+        }
+        if (hostInput) {
+          hostInput.value = this.nickname;
+          hostInput.addEventListener("change", () => this.setNickname(hostInput.value));
+        }
+        if (uidLabel) uidLabel.textContent = this.uid;
+
+        console.log(`[BACKROOMS ONLINE] [Player] Инициализация менеджера. UID=${this.uid}, Nickname=${this.nickname}`);
+        this.setConnectionStatus("CONNECTING");
+
+        try {
+          this.app = initializeApp(firebaseConfig);
+          this.db = getDatabase(this.app);
+        } catch (err) {
+          this.handleNetworkError(err, "Firebase Init");
+          return;
+        }
+
+        // Реальный listener состояния соединения .info/connected
+        const connectedRef = ref(this.db, ".info/connected");
+        this.unsubscribeConnected = onValue(
+          connectedRef,
+          (snap) => {
+            const isConnected = snap.val() === true;
+            if (isConnected) {
+              this.showMenuError("");
+              this.setConnectionStatus("ONLINE");
+              this.measurePing();
+              if (this.currentRoomId) {
+                this.restoreRoomAfterReconnect();
+              }
+            } else {
+              this.setConnectionStatus("OFFLINE");
+            }
+          },
+          (err) => {
+            this.handleNetworkError(err, "Firebase .info/connected");
+          }
+        );
+
+        // Слушатель браузерных событий сети для мгновенной индикации OFFLINE/CONNECTING
+        window.addEventListener("offline", () => {
+          this.setConnectionStatus("OFFLINE", "Потеряно соединение с интернетом.");
+        });
+        window.addEventListener("online", () => {
+          if (this.connectionStatus !== "ONLINE") {
+            this.setConnectionStatus("CONNECTING", "Восстановление соединения...");
           }
         });
 
-        Array.from(remotePlayers.keys()).forEach((pid) => {
-          if (!seenIds.has(pid)) removeRemotePlayer(pid);
+        // Подписка на список активных комнат
+        this.subscribeActiveRoomsList();
+
+        // Запуск единого сетевого тика (65 мс) и проверки таймаутов игроков (1000 мс)
+        this.startNetworkLoops();
+      },
+
+      setNickname(rawNick) {
+        const cleaned = String(rawNick || "").trim().replace(/[<>]/g, "").slice(0, 16);
+        this.nickname = cleaned || loadSavedNickname(this.uid);
+        saveNicknameToStorage(this.nickname);
+        const joinInput = document.getElementById("inputJoinPlayerName");
+        const hostInput = document.getElementById("inputHostPlayerName");
+        if (joinInput && joinInput.value !== this.nickname) joinInput.value = this.nickname;
+        if (hostInput && hostInput.value !== this.nickname) hostInput.value = this.nickname;
+
+        if (this.currentRoomId && this.connectionStatus === "ONLINE") {
+          const pRef = ref(this.db, `rooms/${this.currentRoomId}/players/${this.uid}`);
+          update(pRef, { nickname: this.nickname, lastSeen: Date.now() }).catch((err) =>
+            this.handleNetworkError(err, "Player Nickname Update")
+          );
+          if (this.isHost()) {
+            update(ref(this.db, `rooms/${this.currentRoomId}/meta`), {
+              hostName: this.nickname,
+              updatedAt: Date.now()
+            }).catch((err) => this.handleNetworkError(err, "Room HostName Update"));
+          }
+        }
+      },
+
+      setLobbyLevel(lvl) {
+        this.desiredLobbyLevel = Number(lvl) === 1 ? 1 : 0;
+        if (this.currentRoomId && this.isHost() && this.connectionStatus === "ONLINE") {
+          update(ref(this.db, `rooms/${this.currentRoomId}/meta`), {
+            level: this.desiredLobbyLevel,
+            updatedAt: Date.now()
+          }).catch((err) => this.handleNetworkError(err, "Room Level Update"));
+        }
+      },
+
+      measurePing() {
+        if (!this.db || this.connectionStatus !== "ONLINE") return;
+        const t0 = performance.now();
+        get(ref(this.db, ".info/serverTimeOffset"))
+          .then(() => {
+            this.pingMs = Math.max(1, Math.round(performance.now() - t0));
+            this.updateMenuUI();
+          })
+          .catch((err) => {
+            console.warn("[BACKROOMS ONLINE] [Sync] Не удалось измерить пинг:", err?.message || err);
+          });
+      },
+
+      // Подписка и фильтрация живых комнат (не показывает старые/мертвые комнаты)
+      subscribeActiveRoomsList() {
+        if (!this.db) return;
+        if (this.unsubscribeRoomList) this.unsubscribeRoomList();
+
+        this.unsubscribeRoomList = onValue(
+          ref(this.db, "rooms"),
+          (snapshot) => {
+            this.activeRoomsCache = snapshot.val() || {};
+            try {
+              localStorage.setItem("br_cached_rooms_ts", String(Date.now()));
+            } catch (e) {
+              // Игнорируем переполнение localStorage
+            }
+            this.refreshRoomListUI();
+          },
+          (err) => {
+            this.handleNetworkError(err, "Rooms List Subscription");
+          }
+        );
+      },
+
+      getLivePlayersInRoomRecord(roomRecord) {
+        if (!roomRecord || !roomRecord.players) return [];
+        const now = Date.now();
+        return Object.values(roomRecord.players).filter((p) => {
+          if (!p || p.online === false) return false;
+          const age = now - Number(p.lastSeen || p.updatedAt || 0);
+          return age <= PLAYER_TIMEOUT_MS * 1.5;
+        });
+      },
+
+      refreshRoomListUI() {
+        const container = document.getElementById("firebaseRoomsList");
+        if (!container) return;
+
+        const now = Date.now();
+        const allRooms = this.activeRoomsCache || {};
+        const validRooms = [];
+
+        Object.keys(allRooms).forEach((code) => {
+          const r = allRooms[code];
+          if (!r || !r.meta) return;
+          const livePlayers = this.getLivePlayersInRoomRecord(r);
+          const metaAge = now - Number(r.meta.updatedAt || r.meta.createdAt || 0);
+          if (livePlayers.length > 0 && metaAge <= ROOM_ACTIVE_TTL_MS) {
+            validRooms.push({
+              code,
+              hostName: r.meta.hostName || "Stalker",
+              playerCount: livePlayers.length,
+              maxPlayers: Number(r.meta.maxPlayers || MAX_ROOM_PLAYERS),
+              state: r.meta.state === "playing" ? "PLAYING" : "LOBBY",
+              level: Number(r.meta.level || 0)
+            });
+          }
         });
 
-        const lobbyBox = document.getElementById("lobbyPlayersOnlineBox");
-        if (lobbyBox) {
-          lobbyBox.textContent = `Комната ${activeRoomCode} • Игроки (${onlineNames.length}/4): ${onlineNames.join(", ")}`;
+        if (validRooms.length === 0) {
+          container.innerHTML = `
+            <div class="crt-box flex items-center justify-between">
+              <div>
+                <div class="font-bold text-white">АКТИВНЫХ КОМНАТ НЕ НАЙДЕНО</div>
+                <div class="text-[11px] text-blue-200/75">Нажмите [ СОЗДАТЬ КОМНАТУ ], чтобы открыть новое лобби BR-XXXX</div>
+              </div>
+            </div>
+          `;
+          return;
         }
-        updateOnlineHudBadge();
-      });
 
-      // Слушаем общее состояние мира в комнате (собранные предохранители, щиток ЩРН-4, открытые ящики и лифт)
-      if (unsubscribeRoomWorld) unsubscribeRoomWorld();
-      unsubscribeRoomWorld = onValue(ref(db, `rooms/${activeRoomCode}/world`), (snapshot) => {
-        const wData = snapshot.val();
-        if (!wData) return;
+        container.innerHTML = validRooms
+          .map(
+            (rm) => `
+            <div class="crt-box flex items-center justify-between gap-2">
+              <div>
+                <div class="font-bold text-yellow-200">${rm.code} • HOST: ${rm.hostName}</div>
+                <div class="text-[11px] text-blue-200/80">Игроки: ${rm.playerCount}/${rm.maxPlayers} • Статус: ${rm.state} • Уровень ${rm.level}</div>
+              </div>
+              <button type="button" data-join-code="${rm.code}" class="px-2.5 py-1 bg-[#fef08a] text-[#05168b] font-bold text-xs hover:bg-white">
+                ПОДКЛЮЧИТЬСЯ
+              </button>
+            </div>
+          `
+          )
+          .join("");
 
-        // Синхронизация собранных свободных предохранителей
+        container.querySelectorAll("[data-join-code]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const code = btn.getAttribute("data-join-code");
+            const nameInput = document.getElementById("inputJoinPlayerName")?.value || this.nickname;
+            this.joinRoomByCode(code, nameInput);
+          });
+        });
+      },
+
+      generateRoomCode() {
+        const num = Math.floor(1000 + Math.random() * 9000);
+        return `BR-${num}`;
+      },
+
+      normalizeRoomCode(rawCode) {
+        const cleaned = String(rawCode || "")
+          .trim()
+          .toUpperCase()
+          .replace(/[^A-Z0-9-]/g, "");
+        if (!cleaned) return "";
+        if (/^\d{4}$/.test(cleaned)) return `BR-${cleaned}`;
+        return cleaned;
+      },
+
+      buildLocalPlayerPayload(animMode = "idle") {
+        const g = window.__backroomsGame;
+        const ps = g ? g.getPlayerState() : { x: 1.8, y: 0, z: 1.8, yaw: 0, pitch: 0, level: 0, crouching: false, flashlight: true, hidden: false };
+        const now = Date.now();
+        return {
+          uid: this.uid,
+          nickname: this.nickname,
+          x: ps.x,
+          y: ps.y,
+          z: ps.z,
+          yaw: ps.yaw,
+          pitch: ps.pitch,
+          level: ps.level,
+          anim: ps.crouching ? "crouch" : (animMode || "idle"),
+          crouching: Boolean(ps.crouching),
+          flashlight: Boolean(ps.flashlight),
+          hidden: Boolean(ps.hidden),
+          lastSeen: now,
+          online: true
+        };
+      },
+
+      buildInitialWorldPayload() {
+        const g = window.__backroomsGame;
+        if (!g) return { updatedAt: Date.now() };
+        const fb0 = g.levelFuseBoxes[0];
+        const fb1 = g.levelFuseBoxes[1];
+        let inst0 = 0, inst1 = 0;
+        if (fb0) fb0.slots.forEach((s) => { if (s.installed) inst0++; });
+        if (fb1) fb1.slots.forEach((s) => { if (s.installed) inst1++; });
+        return {
+          looseFuses: g.worldLooseFuses.map((lf) => Boolean(lf.collected)),
+          fusesInstalledL0: inst0,
+          fusesInstalledL1: inst1,
+          doorTargetL0: fb0 ? fb0.doorTargetDeg : 0,
+          doorTargetL1: fb1 ? fb1.doorTargetDeg : 0,
+          elevOpenL0: Boolean(g.levelElevators[0]?.doorsOpen),
+          elevOpenL1: Boolean(g.levelElevators[1]?.doorsOpen),
+          cratesL1: g.l1Crates.map((c) => ({ o: Boolean(c.isOpen), l: Boolean(c.isLooted) })),
+          updatedAt: Date.now()
+        };
+      },
+
+      // 6. СОЗДАНИЕ КОМНАТЫ (с проверкой успешности записи в Firebase)
+      async createRoomFromUI() {
+        const hostInput = document.getElementById("inputHostPlayerName");
+        if (hostInput && hostInput.value.trim()) {
+          this.setNickname(hostInput.value.trim());
+        }
+        await this.createRoom(this.desiredLobbyLevel);
+      },
+
+      async createRoom(startLevel = 0) {
+        this.showMenuError("");
+        if (!this.db || this.connectionStatus !== "ONLINE") {
+          this.handleNetworkError(new Error("Firebase не подключен к сети"), "Room Create");
+          return false;
+        }
+
+        if (this.currentRoomId) {
+          await this.leaveRoom(false);
+        }
+
+        const roomCode = this.generateRoomCode();
+        const now = Date.now();
+        const playerPayload = this.buildLocalPlayerPayload("idle");
+        const roomPayload = {
+          meta: {
+            hostUid: this.uid,
+            hostName: this.nickname,
+            state: "lobby",
+            level: Number(startLevel) === 1 ? 1 : 0,
+            playerCount: 1,
+            maxPlayers: MAX_ROOM_PLAYERS,
+            createdAt: now,
+            updatedAt: now
+          },
+          players: {
+            [this.uid]: playerPayload
+          },
+          world: this.buildInitialWorldPayload()
+        };
+
+        try {
+          console.log(`[BACKROOMS ONLINE] [Room] Создание комнаты ${roomCode}...`);
+          await set(ref(this.db, `rooms/${roomCode}`), roomPayload);
+
+          // Проверяем, что запись реально сохранена
+          const verifySnap = await get(ref(this.db, `rooms/${roomCode}/meta`));
+          if (!verifySnap.exists()) {
+            throw new Error("Не удалось подтвердить создание комнаты на сервере.");
+          }
+
+          this.currentRoomId = roomCode;
+          this.roomId = roomCode;
+          this.roomMeta = verifySnap.val();
+          this.setupOnDisconnectForPlayer(roomCode);
+          this.attachRoomListeners(roomCode);
+
+          console.log(`[BACKROOMS ONLINE] [Room] Комната ${roomCode} успешно создана. HOST: ${this.nickname}`);
+          const g = window.__backroomsGame;
+          if (g && g.showCharacterThought) {
+            g.showCharacterThought(`«Комната ${roomCode} создана! Вы назначены HOST.»`, 3500);
+          }
+          this.updateMenuUI();
+          this.updateOnlineHudBadge();
+          return true;
+        } catch (err) {
+          this.handleNetworkError(err, "Room Create");
+          return false;
+        }
+      },
+
+      // 7. ВХОД ПО КОДУ И ЛИМИТ ИГРОКОВ (без автоматического создания несуществующей комнаты!)
+      async joinRoomByCode(rawCode, rawNickname) {
+        this.showMenuError("");
+        if (rawNickname && rawNickname.trim()) {
+          this.setNickname(rawNickname.trim());
+        }
+
+        const code = this.normalizeRoomCode(rawCode);
+        if (!code) {
+          this.showMenuError("Введите корректный код комнаты (например, BR-4821).");
+          return false;
+        }
+
+        if (!this.db || this.connectionStatus !== "ONLINE") {
+          this.handleNetworkError(new Error("Нет активного соединения с Firebase"), "Room Join");
+          return false;
+        }
+
+        try {
+          console.log(`[BACKROOMS ONLINE] [Room] Проверка существования комнаты ${code}...`);
+          const roomRef = ref(this.db, `rooms/${code}`);
+          const roomSnap = await get(roomRef);
+
+          if (!roomSnap.exists() || !roomSnap.val()?.meta) {
+            console.warn(`[BACKROOMS ONLINE] [Room] Комната ${code} не найдена.`);
+            this.showMenuError("Комната не найдена.");
+            const g = window.__backroomsGame;
+            if (g && g.showCharacterThought) g.showCharacterThought("«Комната не найдена.»", 3200);
+            return false;
+          }
+
+          const roomData = roomSnap.val();
+          const livePlayers = this.getLivePlayersInRoomRecord(roomData);
+          const alreadyInside = livePlayers.some((p) => p.uid === this.uid);
+          const maxAllowed = Number(roomData.meta.maxPlayers || MAX_ROOM_PLAYERS);
+
+          if (!alreadyInside && livePlayers.length >= maxAllowed) {
+            console.warn(`[BACKROOMS ONLINE] [Room] Комната ${code} заполнена (${livePlayers.length}/${maxAllowed}).`);
+            this.showMenuError("Комната заполнена.");
+            const g = window.__backroomsGame;
+            if (g && g.showCharacterThought) g.showCharacterThought("«Комната заполнена.»", 3200);
+            return false;
+          }
+
+          // Транзакционная проверка лимита на meta/playerCount для защиты от одновременного входа
+          const metaRef = ref(this.db, `rooms/${code}/meta`);
+          let txRejectedFull = false;
+          await runTransaction(metaRef, (currentMeta) => {
+            if (currentMeta === null) return currentMeta;
+            const limit = Number(currentMeta.maxPlayers || MAX_ROOM_PLAYERS);
+            const activeCount = alreadyInside ? livePlayers.length : livePlayers.length + 1;
+            if (activeCount > limit) {
+              txRejectedFull = true;
+              return; // прерываем транзакцию
+            }
+            currentMeta.playerCount = activeCount;
+            currentMeta.updatedAt = Date.now();
+            return currentMeta;
+          });
+
+          if (txRejectedFull) {
+            this.showMenuError("Комната заполнена.");
+            return false;
+          }
+
+          if (this.currentRoomId && this.currentRoomId !== code) {
+            await this.leaveRoom(false);
+          }
+
+          const g = window.__backroomsGame;
+          const targetLevel = Number(roomData.meta.level || 0);
+          if (g && g.getCurrentLevel() !== targetLevel) {
+            g.loadLevel(targetLevel);
+          }
+
+          const playerPayload = this.buildLocalPlayerPayload("idle");
+          playerPayload.level = targetLevel;
+
+          await set(ref(this.db, `rooms/${code}/players/${this.uid}`), playerPayload);
+
+          this.currentRoomId = code;
+          this.roomId = code;
+          this.roomMeta = roomData.meta;
+          this.setupOnDisconnectForPlayer(code);
+          this.attachRoomListeners(code);
+
+          console.log(`[BACKROOMS ONLINE] [Room] Успешный вход в комнату ${code} как ${this.nickname} (${this.uid})`);
+
+          // Переключаем экран меню в лобби комнаты или сразу в игру, если state === 'playing'
+          if (g) {
+            if (roomData.meta.state === "playing") {
+              g.startGameSession(false, `ОНЛАЙН КО-ОП: ${code}`);
+              g.showCharacterThought(`«Вы вошли в идущую игру комнаты ${code}!»`, 3500);
+            } else {
+              g.switchMenuSubview("lobby");
+              g.showCharacterThought(`«Вы подключились к лобби ${code}. Ожидание старта от HOST...»`, 3500);
+            }
+          }
+
+          this.updateMenuUI();
+          this.updateOnlineHudBadge();
+          return true;
+        } catch (err) {
+          this.handleNetworkError(err, "Room Join");
+          return false;
+        }
+      },
+
+      // 10. onDisconnect для автоматического выставления online=false / удаления узла при закрытии вкладки
+      setupOnDisconnectForPlayer(roomCode) {
+        if (!this.db || !roomCode) return;
+        const myPlayerRef = ref(this.db, `rooms/${roomCode}/players/${this.uid}`);
+        const disconnectHandler = onDisconnect(myPlayerRef);
+        this.activeDisconnectRef = disconnectHandler;
+        disconnectHandler
+          .remove()
+          .catch((err) => this.handleNetworkError(err, "Player onDisconnect Setup"));
+      },
+
+      // Подключение слушателей комнаты (meta, players, world, events, monsters)
+      attachRoomListeners(roomCode) {
+        this.cleanupRoomListenersOnly();
+
+        const g = window.__backroomsGame;
+
+        // 1) Слушатель метаданных комнаты (state: lobby/playing, hostUid, hostName, level)
+        this.unsubscribeRoomMeta = onValue(
+          ref(this.db, `rooms/${roomCode}/meta`),
+          (snap) => {
+            const meta = snap.val();
+            if (!meta) return;
+            const prevState = this.roomMeta?.state;
+            const prevHostUid = this.roomMeta?.hostUid;
+            this.roomMeta = meta;
+
+            if (prevHostUid && meta.hostUid && prevHostUid !== meta.hostUid) {
+              console.log(`[BACKROOMS ONLINE] [Room] Смена HOST в комнате ${roomCode}: теперь HOST — ${meta.hostName} (${meta.hostUid})`);
+              if (g && g.showCharacterThought) {
+                g.showCharacterThought(`«Новый HOST комнаты: ${meta.hostName}»`, 3200);
+              }
+            }
+
+            // Если комната перешла в состояние 'playing' и мы ещё в меню — автоматически запускаем игру!
+            if (meta.state === "playing" && (prevState !== "playing" || (g && g.isMenuOpen()))) {
+              const roomLvl = Number(meta.level || 0);
+              if (g) {
+                if (g.getCurrentLevel() !== roomLvl) g.loadLevel(roomLvl);
+                if (g.isMenuOpen()) {
+                  g.startGameSession(false, `ОНЛАЙН КО-ОП: ${roomCode}`);
+                  g.showCharacterThought(`«HOST (${meta.hostName}) запустил игру в комнате ${roomCode}!»`, 3500);
+                }
+              }
+            }
+
+            this.updateMenuUI();
+            this.updateOnlineHudBadge();
+          },
+          (err) => this.handleNetworkError(err, "Room Meta Listener")
+        );
+
+        // 2) Слушатель игроков в комнате
+        this.unsubscribeRoomPlayers = onValue(
+          ref(this.db, `rooms/${roomCode}/players`),
+          (snap) => {
+            const playersVal = snap.val() || {};
+            const now = Date.now();
+            const activeUids = new Set();
+
+            this.roomPlayersMeta.clear();
+
+            Object.keys(playersVal).forEach((pid) => {
+              const pData = playersVal[pid];
+              if (!pData) return;
+              const age = now - Number(pData.lastSeen || pData.updatedAt || now);
+              const isAlive = pData.online !== false && age <= PLAYER_TIMEOUT_MS;
+              if (!isAlive) return;
+
+              this.roomPlayersMeta.set(pid, pData);
+              activeUids.add(pid);
+
+              if (pid === this.uid) return;
+
+              const rp = this.getOrCreateRemotePlayer(pid, pData);
+              if (rp) {
+                rp.targetX = typeof pData.x === "number" ? pData.x : rp.targetX;
+                rp.targetY = typeof pData.y === "number" ? pData.y : 0;
+                rp.targetZ = typeof pData.z === "number" ? pData.z : rp.targetZ;
+                rp.targetYaw = typeof pData.yaw === "number" ? pData.yaw : rp.targetYaw;
+                rp.targetPitch = typeof pData.pitch === "number" ? pData.pitch : 0;
+                rp.level = Number(pData.level || 0);
+                rp.anim = pData.anim || "idle";
+                rp.crouching = Boolean(pData.crouching);
+                rp.flashlight = pData.flashlight !== false;
+                rp.hidden = Boolean(pData.hidden);
+                rp.lastSeen = Number(pData.lastSeen || now);
+                rp.peerSpot.intensity = rp.flashlight ? 2.6 : 0;
+              }
+            });
+
+            // Удаляем отключившихся игроков
+            Array.from(this.remotePlayers.keys()).forEach((pid) => {
+              if (!activeUids.has(pid)) {
+                const leavingName = this.remotePlayers.get(pid)?.nickname || pid;
+                this.removeRemotePlayer(pid);
+                console.log(`[BACKROOMS ONLINE] [Player] Игрок ${leavingName} (${pid}) покинул комнату.`);
+                if (g && g.showCharacterThought) {
+                  g.showCharacterThought(`«Игрок ${leavingName} отключился.»`, 3000);
+                }
+              }
+            });
+
+            // Проверка: если текущий HOST отсутствует среди живых игроков, выбираем нового HOST
+            this.ensureValidHost();
+            this.updateMenuUI();
+            this.updateOnlineHudBadge();
+          },
+          (err) => this.handleNetworkError(err, "Room Players Listener")
+        );
+
+        // 3) Слушатель общего состояния мира
+        this.unsubscribeRoomWorld = onValue(
+          ref(this.db, `rooms/${roomCode}/world`),
+          (snap) => {
+            const wData = snap.val();
+            if (!wData || !g) return;
+            this.applyWorldSnapshot(wData);
+          },
+          (err) => this.handleNetworkError(err, "Room World Listener")
+        );
+
+        // 4) Слушатель игровых событий (emitGameEvent -> handleGameEvent)
+        this.unsubscribeRoomEvents = onValue(
+          ref(this.db, `rooms/${roomCode}/events/latest`),
+          (snap) => {
+            const ev = snap.val();
+            if (!ev || !ev.id) return;
+            if (ev.id === this.lastProcessedEventId) return;
+            this.lastProcessedEventId = ev.id;
+            if (ev.senderUid !== this.uid) {
+              this.handleGameEvent(ev.type, ev.payload, ev.senderName);
+            }
+          },
+          (err) => this.handleNetworkError(err, "Room Events Listener")
+        );
+
+        // 5) Слушатель монстров от HOST (world authority)
+        this.unsubscribeRoomMonsters = onValue(
+          ref(this.db, `rooms/${roomCode}/monsters`),
+          (snap) => {
+            if (this.isHost()) return;
+            const mData = snap.val();
+            if (!mData) return;
+            this.latestSyncedMonsters = mData;
+            if (mData.l1Light && g) {
+              g.setLightStateL1(mData.l1Light.state, mData.l1Light.timer);
+            }
+          },
+          (err) => this.handleNetworkError(err, "Room Monsters Listener")
+        );
+      },
+
+      // 16. Автоматический выбор нового HOST, если старый HOST вышел или отключился
+      ensureValidHost() {
+        if (!this.currentRoomId || !this.roomMeta || this.roomPlayersMeta.size === 0) return;
+        const currentHostUid = this.roomMeta.hostUid;
+        if (currentHostUid && this.roomPlayersMeta.has(currentHostUid)) return;
+
+        // Детерминированно выбираем первого игрока по отсортированному UID
+        const sortedUids = Array.from(this.roomPlayersMeta.keys()).sort();
+        const nextHostUid = sortedUids[0];
+        if (nextHostUid === this.uid) {
+          const nextHostName = this.nickname;
+          console.log(`[BACKROOMS ONLINE] [Room] Прежний HOST вышел. Назначаем нового HOST: ${nextHostName} (${this.uid})`);
+          update(ref(this.db, `rooms/${this.currentRoomId}/meta`), {
+            hostUid: this.uid,
+            hostName: nextHostName,
+            playerCount: this.roomPlayersMeta.size,
+            updatedAt: Date.now()
+          }).catch((err) => this.handleNetworkError(err, "Host Migration"));
+        }
+      },
+
+      isHost() {
+        return Boolean(this.currentRoomId && this.roomMeta && this.roomMeta.hostUid === this.uid);
+      },
+
+      isNonHostInActiveRoom() {
+        return Boolean(this.currentRoomId && this.roomMeta && this.roomMeta.hostUid !== this.uid);
+      },
+
+      // 17. Запуск игры кнопкой [ НАЧАТЬ ИГРУ ] (меняет state = 'playing' для всех игроков комнаты)
+      async startGameFromLobbyButton(fallbackLevel = 0) {
+        const g = window.__backroomsGame;
+        if (!this.currentRoomId) {
+          const created = await this.createRoom(fallbackLevel);
+          if (!created) return;
+        }
+
+        if (this.isHost()) {
+          const targetLvl = Number(this.roomMeta?.level ?? fallbackLevel) === 1 ? 1 : 0;
+          try {
+            await update(ref(this.db, `rooms/${this.currentRoomId}/meta`), {
+              state: "playing",
+              level: targetLvl,
+              updatedAt: Date.now()
+            });
+            if (g) {
+              if (g.getCurrentLevel() !== targetLvl) g.loadLevel(targetLvl);
+              g.startGameSession(false, `ОНЛАЙН КО-ОП: ${this.currentRoomId}`);
+            }
+          } catch (err) {
+            this.handleNetworkError(err, "Start Match");
+          }
+        } else {
+          // Если нажал обычный участник комнаты — переходит в сцену
+          const roomLvl = Number(this.roomMeta?.level ?? fallbackLevel) === 1 ? 1 : 0;
+          if (g) {
+            if (g.getCurrentLevel() !== roomLvl) g.loadLevel(roomLvl);
+            g.startGameSession(false, `ОНЛАЙН КО-ОП: ${this.currentRoomId}`);
+          }
+        }
+      },
+
+      copyRoomCode() {
+        if (!this.currentRoomId) {
+          this.showMenuError("Сначала создайте комнату или подключитесь к существующей.");
+          return;
+        }
+        const code = this.currentRoomId;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard
+            .writeText(code)
+            .then(() => {
+              const btn = document.getElementById("btnCopyRoomCode");
+              if (btn) {
+                const orig = btn.textContent;
+                btn.textContent = "[ СКОПИРОВАНО! ]";
+                setTimeout(() => { btn.textContent = orig; }, 1600);
+              }
+            })
+            .catch((err) => {
+              console.warn("[BACKROOMS ONLINE] [Room] Ошибка буфера обмена:", err);
+            });
+        }
+      },
+
+      // 25. ОЧИСТКА LISTENERS И ВЫХОД ИЗ КОМНАТЫ
+      cleanupRoomListenersOnly() {
+        if (this.unsubscribeRoomMeta) { this.unsubscribeRoomMeta(); this.unsubscribeRoomMeta = null; }
+        if (this.unsubscribeRoomPlayers) { this.unsubscribeRoomPlayers(); this.unsubscribeRoomPlayers = null; }
+        if (this.unsubscribeRoomWorld) { this.unsubscribeRoomWorld(); this.unsubscribeRoomWorld = null; }
+        if (this.unsubscribeRoomEvents) { this.unsubscribeRoomEvents(); this.unsubscribeRoomEvents = null; }
+        if (this.unsubscribeRoomMonsters) { this.unsubscribeRoomMonsters(); this.unsubscribeRoomMonsters = null; }
+      },
+
+      async leaveRoom(notifyUser = true) {
+        const oldRoomId = this.currentRoomId;
+        const wasHost = this.isHost();
+
+        this.cleanupRoomListenersOnly();
+
+        // Очищаем все 3D-модели удаленных игроков
+        Array.from(this.remotePlayers.keys()).forEach((pid) => this.removeRemotePlayer(pid));
+        this.remotePlayers.clear();
+
+        // Определяем следующего HOST перед выходом, если мы были HOST
+        let nextHostCandidate = null;
+        this.roomPlayersMeta.forEach((pData, pid) => {
+          if (pid !== this.uid && !nextHostCandidate) {
+            nextHostCandidate = pData;
+          }
+        });
+
+        this.roomPlayersMeta.clear();
+        this.roomMeta = null;
+        this.currentRoomId = null;
+        this.roomId = null;
+        this.lastSentSnapshot = null;
+        this.latestSyncedMonsters = null;
+
+        if (this.activeDisconnectRef) {
+          this.activeDisconnectRef.cancel().catch((err) => {
+            console.warn("[BACKROOMS ONLINE] [Player] Отмена onDisconnect:", err?.message || err);
+          });
+          this.activeDisconnectRef = null;
+        }
+
+        if (oldRoomId && this.db && this.connectionStatus === "ONLINE") {
+          try {
+            await remove(ref(this.db, `rooms/${oldRoomId}/players/${this.uid}`));
+            if (wasHost && nextHostCandidate) {
+              await update(ref(this.db, `rooms/${oldRoomId}/meta`), {
+                hostUid: nextHostCandidate.uid,
+                hostName: nextHostCandidate.nickname || "Stalker",
+                updatedAt: Date.now()
+              });
+            }
+          } catch (err) {
+            this.handleNetworkError(err, "Leave Room Cleanup");
+          }
+        }
+
+        if (notifyUser) {
+          console.log(`[BACKROOMS ONLINE] [Room] Вы вышли из комнаты ${oldRoomId || ""}`);
+          const g = window.__backroomsGame;
+          if (g && g.showCharacterThought && oldRoomId) {
+            g.showCharacterThought(`«Вы покинули онлайн-комнату ${oldRoomId}.»`, 3000);
+          }
+        }
+
+        this.updateMenuUI();
+        this.updateOnlineHudBadge();
+      },
+
+      // 26. ПЕРЕПОДКЛЮЧЕНИЕ ПОСЛЕ ВОССТАНОВЛЕНИЯ ИНТЕРНЕТА
+      async restoreRoomAfterReconnect() {
+        if (!this.currentRoomId || this.isReconnectingRoom) return;
+        this.isReconnectingRoom = true;
+        const code = this.currentRoomId;
+        console.log(`[BACKROOMS ONLINE] [Room] Восстановление сессии в комнате ${code} после переподключения...`);
+        try {
+          const payload = this.buildLocalPlayerPayload("idle");
+          await update(ref(this.db, `rooms/${code}/players/${this.uid}`), payload);
+          this.setupOnDisconnectForPlayer(code);
+          this.attachRoomListeners(code);
+          const g = window.__backroomsGame;
+          if (g && g.showCharacterThought) {
+            g.showCharacterThought(`«Соединение с комнатой ${code} восстановлено!»`, 3000);
+          }
+        } catch (err) {
+          this.handleNetworkError(err, "Reconnect Room");
+        } finally {
+          this.isReconnectingRoom = false;
+        }
+      },
+
+      // 4 & 13 & 14. 3D-МОДЕЛИ УДАЛЕННЫХ ИГРОКОВ (HAZMAT RIG) И WORLD-SPACE NICKNAME MARKER
+      createWorldSpaceNameTag(nickname, isHostFlag = false) {
+        const c = document.createElement("canvas");
+        c.width = 256;
+        c.height = 80;
+        const ctx = c.getContext("2d");
+
+        ctx.fillStyle = "rgba(6, 10, 24, 0.82)";
+        ctx.fillRect(8, 8, 240, 64);
+        ctx.strokeStyle = isHostFlag ? "#4ade80" : "#facc15";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(8, 8, 240, 64);
+
+        ctx.fillStyle = isHostFlag ? "#4ade80" : "#93c5fd";
+        ctx.font = "bold 15px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(isHostFlag ? "[HOST]" : "[PLAYER]", 128, 30);
+
+        ctx.fillStyle = "#fef08a";
+        ctx.font = "bold 21px monospace";
+        ctx.fillText(String(nickname || "Stalker").slice(0, 15), 128, 56);
+
+        const tex = new THREE.CanvasTexture(c);
+        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(1.32, 0.41, 1);
+        sprite.position.set(0, 2.14, 0);
+        return sprite;
+      },
+
+      getOrCreateRemotePlayer(pid, pData) {
+        const g = window.__backroomsGame;
+        if (!g) return null;
+        const isPlayerHost = Boolean(this.roomMeta && this.roomMeta.hostUid === pid);
+        const displayNick = pData.nickname || pData.name || "Stalker";
+
+        if (this.remotePlayers.has(pid)) {
+          const existing = this.remotePlayers.get(pid);
+          if (existing.nickname !== displayNick || existing.isHostBadge !== isPlayerHost) {
+            existing.nickname = displayNick;
+            existing.isHostBadge = isPlayerHost;
+            if (existing.nameSprite) {
+              existing.rig.root.remove(existing.nameSprite);
+              if (existing.nameSprite.material?.map) existing.nameSprite.material.map.dispose();
+              if (existing.nameSprite.material) existing.nameSprite.material.dispose();
+            }
+            existing.nameSprite = this.createWorldSpaceNameTag(displayNick, isPlayerHost);
+            existing.rig.root.add(existing.nameSprite);
+          }
+          return existing;
+        }
+
+        // Используем существующую 3D-модель исследователя Hazmat MK-IV
+        const rig = g.createExplorerRig();
+        const nameSprite = this.createWorldSpaceNameTag(displayNick, isPlayerHost);
+        rig.root.add(nameSprite);
+
+        // 3D-луч фонарика удаленного игрока
+        const peerSpot = new THREE.SpotLight(0xfffbe6, 2.6, 26, Math.PI / 5.5, 0.5, 1.4);
+        peerSpot.position.set(0, 1.38, 0.22);
+        const peerTarget = new THREE.Object3D();
+        peerTarget.position.set(0, 1.25, 8.0);
+        rig.root.add(peerSpot);
+        rig.root.add(peerTarget);
+        peerSpot.target = peerTarget;
+
+        const startX = typeof pData.x === "number" ? pData.x : 1.8;
+        const startY = typeof pData.y === "number" ? pData.y : 0;
+        const startZ = typeof pData.z === "number" ? pData.z : 1.8;
+        const startYaw = typeof pData.yaw === "number" ? pData.yaw : 0;
+        const startPitch = typeof pData.pitch === "number" ? pData.pitch : 0;
+
+        rig.root.position.set(startX, 0, startZ);
+        rig.root.rotation.y = startYaw + Math.PI;
+        g.scene.add(rig.root);
+
+        const rp = {
+          uid: pid,
+          nickname: displayNick,
+          isHostBadge: isPlayerHost,
+          rig,
+          nameSprite,
+          peerSpot,
+          peerTarget,
+          currentX: startX,
+          currentY: startY,
+          currentZ: startZ,
+          currentYaw: startYaw,
+          currentPitch: startPitch,
+          targetX: startX,
+          targetY: startY,
+          targetZ: startZ,
+          targetYaw: startYaw,
+          targetPitch: startPitch,
+          level: Number(pData.level || 0),
+          anim: pData.anim || "idle",
+          crouching: Boolean(pData.crouching),
+          flashlight: pData.flashlight !== false,
+          hidden: Boolean(pData.hidden),
+          lastSeen: Number(pData.lastSeen || Date.now())
+        };
+        this.remotePlayers.set(pid, rp);
+        console.log(`[BACKROOMS ONLINE] [Player] Создана 3D-модель удаленного игрока: ${displayNick} (${pid})`);
+        return rp;
+      },
+
+      removeRemotePlayer(pid) {
+        const g = window.__backroomsGame;
+        const rp = this.remotePlayers.get(pid);
+        if (!rp) return;
+        if (g && rp.rig && rp.rig.root) {
+          g.scene.remove(rp.rig.root);
+        }
+        if (rp.nameSprite) {
+          if (rp.nameSprite.material?.map) rp.nameSprite.material.map.dispose();
+          if (rp.nameSprite.material) rp.nameSprite.material.dispose();
+        }
+        this.remotePlayers.delete(pid);
+      },
+
+      // 9 & 12. HEARTBEAT (3000ms), TIMEOUT SWEEP (10000ms) И NETWORK TICK (65ms)
+      startNetworkLoops() {
+        // Heartbeat каждые 3000 мс
+        if (this.heartbeatTimerId) clearInterval(this.heartbeatTimerId);
+        this.heartbeatTimerId = setInterval(() => {
+          this.sendHeartbeat();
+        }, HEARTBEAT_INTERVAL_MS);
+
+        // Проверка таймаута игроков (PLAYER_TIMEOUT_MS = 10000 мс) каждую секунду
+        if (this.timeoutSweepTimerId) clearInterval(this.timeoutSweepTimerId);
+        this.timeoutSweepTimerId = setInterval(() => {
+          this.sweepTimedOutPlayers();
+        }, 1000);
+      },
+
+      sendHeartbeat() {
+        if (!this.db || !this.currentRoomId || this.connectionStatus !== "ONLINE") return;
+        const now = Date.now();
+        const t0 = performance.now();
+
+        update(ref(this.db, `rooms/${this.currentRoomId}/players/${this.uid}`), {
+          lastSeen: now,
+          online: true
+        })
+          .then(() => {
+            this.pingMs = Math.max(1, Math.round(performance.now() - t0));
+            this.updateMenuUI();
+          })
+          .catch((err) => this.handleNetworkError(err, "Heartbeat"));
+
+        if (this.isHost()) {
+          update(ref(this.db, `rooms/${this.currentRoomId}/meta`), {
+            playerCount: Math.max(1, this.roomPlayersMeta.size),
+            updatedAt: now
+          }).catch((err) => this.handleNetworkError(err, "Room Meta Heartbeat"));
+        }
+      },
+
+      sweepTimedOutPlayers() {
+        if (!this.currentRoomId) return;
+        const now = Date.now();
+        const g = window.__backroomsGame;
+        let removedAny = false;
+
+        this.remotePlayers.forEach((rp, pid) => {
+          if (now - rp.lastSeen > PLAYER_TIMEOUT_MS) {
+            const nick = rp.nickname || pid;
+            console.log(`[BACKROOMS ONLINE] [Player] Таймаут игрока ${nick} (${pid}) > ${PLAYER_TIMEOUT_MS}ms. Удаление модели.`);
+            this.removeRemotePlayer(pid);
+            this.roomPlayersMeta.delete(pid);
+            removedAny = true;
+            if (g && g.showCharacterThought) {
+              g.showCharacterThought(`«Игрок ${nick} отключился (таймаут).»`, 3200);
+            }
+            if (this.isHost() && this.connectionStatus === "ONLINE") {
+              remove(ref(this.db, `rooms/${this.currentRoomId}/players/${pid}`)).catch((err) =>
+                this.handleNetworkError(err, "Prune TimedOut Player")
+              );
+            }
+          }
+        });
+
+        if (removedAny) {
+          this.ensureValidHost();
+          this.updateMenuUI();
+          this.updateOnlineHudBadge();
+        }
+      },
+
+      // 11 & 12 & 15. ПЛАВНАЯ ИНТЕРПОЛЯЦИЯ И NETWORK TICK (~65 мс)
+      updateFrame(elapsed, dt, currentAnimMode) {
+        const g = window.__backroomsGame;
+        if (!g || !this.currentRoomId) return;
+
+        const localLevel = g.getCurrentLevel();
+
+        // 1) Плавная интерполяция (lerp) всех удаленных игроков каждый кадр рендера
+        this.remotePlayers.forEach((rp) => {
+          // Скрываем модель, если игрок на другом уровне (Level 0 vs Level 1) или спрятался в шкафу/нише
+          const visibleOnSameLevel = rp.level === localLevel && !rp.hidden;
+          rp.rig.root.visible = visibleOnSameLevel;
+          if (!visibleOnSameLevel) return;
+
+          const distDelta = Math.hypot(rp.targetX - rp.currentX, rp.targetZ - rp.currentZ);
+          const lerpFactor = Math.min(1, dt * 13.5);
+
+          if (distDelta > TELEPORT_SNAP_DIST) {
+            // Корректирующий телепорт при резком скачке (например, возрождение или смена уровня)
+            rp.currentX = rp.targetX;
+            rp.currentY = rp.targetY;
+            rp.currentZ = rp.targetZ;
+          } else {
+            rp.currentX += (rp.targetX - rp.currentX) * lerpFactor;
+            rp.currentY += (rp.targetY - rp.currentY) * lerpFactor;
+            rp.currentZ += (rp.targetZ - rp.currentZ) * lerpFactor;
+          }
+
+          rp.rig.root.position.set(rp.currentX, 0, rp.currentZ);
+
+          // Плавная интерполяция угла поворота yaw по кратчайшей дуге
+          const diffYaw = Math.atan2(Math.sin(rp.targetYaw - rp.currentYaw), Math.cos(rp.targetYaw - rp.currentYaw));
+          rp.currentYaw += diffYaw * lerpFactor;
+          rp.rig.root.rotation.y = rp.currentYaw + Math.PI;
+
+          // Плавная интерполяция угла наклона взгляда pitch
+          rp.currentPitch += (rp.targetPitch - rp.currentPitch) * lerpFactor;
+
+          // Синхронизация анимаций (idle, walk, run, crouch)
+          const animKey = rp.anim === "crouch" ? (distDelta > 0.025 ? "walk" : "idle") : (rp.anim || "idle");
+          g.animateExplorerRig(rp.rig, animKey, dt, "vhs");
+
+          if (rp.crouching || rp.anim === "crouch") {
+            rp.rig.pelvis.position.y -= 0.34;
+            rp.rig.torso.rotation.x += 0.28;
+          }
+
+          // Применяем интерполированный pitch к голове и лучу фонарика
+          rp.rig.head.rotation.x = -rp.currentPitch * 0.65;
+          if (rp.peerTarget) {
+            rp.peerTarget.position.set(0, 1.25 + Math.sin(rp.currentPitch) * 4.5, 8.0);
+          }
+        });
+
+        // 2) Network Tick каждые ONLINE_SYNC_INTERVAL_MS (65 мс) с проверкой дельты для экономии мобильного трафика
+        const nowPerf = performance.now();
+        if (nowPerf - this.lastSentTime >= ONLINE_SYNC_INTERVAL_MS && this.connectionStatus === "ONLINE") {
+          this.lastSentTime = nowPerf;
+          this.networkTick(currentAnimMode);
+        }
+      },
+
+      networkTick(currentAnimMode) {
+        if (!this.db || !this.currentRoomId || this.connectionStatus !== "ONLINE") return;
+        const g = window.__backroomsGame;
+        if (!g) return;
+
+        const payload = this.buildLocalPlayerPayload(currentAnimMode);
+        const prev = this.lastSentSnapshot;
+        const now = Date.now();
+
+        // Отправляем пакет только если позиция/поворот/состояние реально изменились, либо прошло > 2.5 сек
+        const hasChanged =
+          !prev ||
+          Math.abs(payload.x - prev.x) > 0.008 ||
+          Math.abs(payload.y - prev.y) > 0.008 ||
+          Math.abs(payload.z - prev.z) > 0.008 ||
+          Math.abs(payload.yaw - prev.yaw) > 0.012 ||
+          Math.abs(payload.pitch - prev.pitch) > 0.012 ||
+          payload.level !== prev.level ||
+          payload.anim !== prev.anim ||
+          payload.crouching !== prev.crouching ||
+          payload.flashlight !== prev.flashlight ||
+          payload.hidden !== prev.hidden ||
+          now - prev.lastSeen > 2500;
+
+        if (hasChanged) {
+          this.lastSentSnapshot = payload;
+          update(ref(this.db, `rooms/${this.currentRoomId}/players/${this.uid}`), payload).catch((err) =>
+            this.handleNetworkError(err, "Sync Player Tick")
+          );
+        }
+
+        // Если текущий игрок — HOST, транслируем авторитетное состояние монстров (Bacteria на L0, Hound и Skin-Stealer на L1)
+        if (this.isHost()) {
+          const mState = g.getMonstersState();
+          mState.l1Light = g.getLightStateL1();
+          mState.updatedAt = now;
+          update(ref(this.db, `rooms/${this.currentRoomId}/monsters`), mState).catch((err) =>
+            this.handleNetworkError(err, "Sync Host Monsters")
+          );
+        }
+      },
+
+      applySyncedMonsters(elapsed, dt) {
+        const g = window.__backroomsGame;
+        if (g && this.latestSyncedMonsters) {
+          g.applyMonstersState(this.latestSyncedMonsters, elapsed, dt);
+        }
+      },
+
+      onLocalLevelChanged(newLevel) {
+        if (!this.currentRoomId || this.connectionStatus !== "ONLINE") return;
+        this.emitGameEvent("level_change", { level: newLevel, playerName: this.nickname });
+      },
+
+      // 18. ОБЩИЙ МИР И УНИВЕРСАЛЬНАЯ СИСТЕМА СОБЫТИЙ emitGameEvent / handleGameEvent
+      emitGameEvent(type, payload = {}) {
+        if (!this.db || !this.currentRoomId || this.connectionStatus !== "ONLINE") return;
+        const eventId = `ev_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        this.lastProcessedEventId = eventId;
+
+        const eventPacket = {
+          id: eventId,
+          type,
+          payload,
+          senderUid: this.uid,
+          senderName: this.nickname,
+          timestamp: Date.now()
+        };
+
+        console.log(`[BACKROOMS ONLINE] [Sync] emitGameEvent: ${type}`, payload);
+
+        update(ref(this.db, `rooms/${this.currentRoomId}/events`), {
+          latest: eventPacket
+        }).catch((err) => this.handleNetworkError(err, `emitGameEvent(${type})`));
+
+        // Одновременно обновляем устойчивый слепок мира rooms/{room}/world
+        this.syncWorldState();
+      },
+
+      handleGameEvent(type, payload = {}, senderName = "Напарник") {
+        const g = window.__backroomsGame;
+        if (!g) return;
+        console.log(`[BACKROOMS ONLINE] [Sync] handleGameEvent: ${type} от ${senderName}`, payload);
+
+        const lvl = typeof payload.level === "number" ? payload.level : g.getCurrentLevel();
+        const fb = g.levelFuseBoxes[lvl];
+        const elev = g.levelElevators[lvl];
+
+        switch (type) {
+          case "fuse_collected": {
+            const idx = payload.fuseIdx;
+            if (typeof idx === "number" && g.worldLooseFuses[idx] && !g.worldLooseFuses[idx].collected) {
+              g.worldLooseFuses[idx].collected = true;
+              g.worldLooseFuses[idx].holder.visible = false;
+              g.showCharacterThought(`«${senderName} нашёл предохранитель ПН2-63А!»`, 3000);
+            }
+            break;
+          }
+          case "fuse_inserted": {
+            if (fb) {
+              const sIdx = typeof payload.slotIdx === "number" ? payload.slotIdx : 0;
+              const slot = fb.slots[sIdx];
+              if (slot && !slot.installed) {
+                slot.installed = true;
+                slot.ledMat.color.setHex(0x22c55e);
+                if (!slot.installedMesh) {
+                  slot.installedMesh = g.createDetailedFuseMesh();
+                  slot.anchor.add(slot.installedMesh);
+                }
+              }
+              g.refreshInventoryUI();
+              g.showCharacterThought(`«${senderName} установил предохранитель в щиток ЩРН-4 (${payload.installedTotal || 1}/4).»`, 3200);
+            }
+            break;
+          }
+          case "fuse_removed": {
+            if (fb && typeof payload.slotIdx === "number") {
+              const slot = fb.slots[payload.slotIdx];
+              if (slot && slot.installed) {
+                slot.installed = false;
+                slot.ledMat.color.setHex(0xef4444);
+                if (slot.installedMesh) slot.installedMesh.visible = false;
+              }
+              g.refreshInventoryUI();
+            }
+            break;
+          }
+          case "power_on": {
+            if (fb) {
+              fb.slots.forEach((s) => {
+                if (!s.installed) {
+                  s.installed = true;
+                  s.ledMat.color.setHex(0x22c55e);
+                  if (!s.installedMesh) {
+                    s.installedMesh = g.createDetailedFuseMesh();
+                    s.anchor.add(s.installedMesh);
+                  }
+                }
+              });
+            }
+            g.refreshInventoryUI();
+            g.showCharacterThought(`«${senderName} подал питание 380В на грузовой лифт!»`, 3600);
+            break;
+          }
+          case "power_off": {
+            if (lvl === 1) g.setLightStateL1("BLACKOUT", 0);
+            break;
+          }
+          case "elevator_called":
+          case "elevator_open": {
+            if (elev) {
+              elev.doorsOpen = true;
+              elev.openTarget = 1;
+              if (g.sound) g.sound.playMechanismSound("elevator_ding", 0.85);
+              g.showCharacterThought(`«${senderName} открыл двери грузового лифта!»`, 3200);
+            }
+            break;
+          }
+          case "elevator_close": {
+            if (elev) {
+              elev.doorsOpen = false;
+              elev.openTarget = 0;
+            }
+            break;
+          }
+          case "level_change": {
+            if (typeof payload.level === "number") {
+              g.showCharacterThought(`«${senderName} перешёл на Уровень ${payload.level}.»`, 3000);
+            }
+            break;
+          }
+          case "door_open": {
+            if (payload.target === "fusebox" && fb) {
+              fb.doorTargetDeg = payload.angle || 108;
+            } else if (payload.target === "crate" && typeof payload.crateIdx === "number") {
+              const cr = g.l1Crates[payload.crateIdx];
+              if (cr && !cr.isOpen) {
+                cr.isOpen = true;
+                cr.lidTargetRad = -Math.PI * 0.58;
+              }
+            }
+            break;
+          }
+          case "door_close": {
+            if (payload.target === "fusebox" && fb) {
+              fb.doorTargetDeg = 0;
+            } else if (payload.target === "crate_looted" && typeof payload.crateIdx === "number") {
+              const cr = g.l1Crates[payload.crateIdx];
+              if (cr) {
+                cr.isOpen = true;
+                cr.isLooted = true;
+                if (cr.itemMesh) cr.itemMesh.visible = false;
+              }
+            }
+            break;
+          }
+          case "monster_event": {
+            if (payload.message) g.showCharacterThought(payload.message, 3000);
+            break;
+          }
+        }
+      },
+
+      syncWorldState() {
+        if (!this.db || !this.currentRoomId || this.connectionStatus !== "ONLINE") return;
+        const worldPayload = this.buildInitialWorldPayload();
+        update(ref(this.db, `rooms/${this.currentRoomId}/world`), worldPayload).catch((err) =>
+          this.handleNetworkError(err, "Sync World State")
+        );
+      },
+
+      applyWorldSnapshot(wData) {
+        const g = window.__backroomsGame;
+        if (!g || !wData) return;
+
         if (Array.isArray(wData.looseFuses)) {
           wData.looseFuses.forEach((collectedFlag, idx) => {
             if (collectedFlag && g.worldLooseFuses[idx] && !g.worldLooseFuses[idx].collected) {
@@ -7065,7 +8404,6 @@
           });
         }
 
-        // Синхронизация вставленных в электрощиток предохранителей на Уровне 0 и Уровне 1
         [0, 1].forEach((lvl) => {
           const fb = g.levelFuseBoxes[lvl];
           const instCount = Number(wData[`fusesInstalledL${lvl}`] || 0);
@@ -7092,7 +8430,6 @@
           }
         });
 
-        // Синхронизация ящиков Уровня 1
         if (Array.isArray(wData.cratesL1)) {
           wData.cratesL1.forEach((cState, idx) => {
             const cr = g.l1Crates[idx];
@@ -7109,159 +8446,130 @@
         }
 
         g.refreshInventoryUI();
-      });
+      },
 
-      // Слушаем состояние монстров и света от хоста
-      if (unsubscribeRoomMonsters) unsubscribeRoomMonsters();
-      unsubscribeRoomMonsters = onValue(ref(db, `rooms/${activeRoomCode}/monsters`), (snapshot) => {
-        if (isRoomHost) return;
-        const mData = snapshot.val();
-        if (!mData) return;
-        latestSyncedMonsters = mData;
-        if (mData.l1Light) {
-          g.setLightStateL1(mData.l1Light.state, mData.l1Light.timer);
-        }
-      });
+      // 20 & 22. ОБНОВЛЕНИЕ UI ОНЛАЙН-МЕНЮ И РЕАЛЬНОГО СТАТУСА СОЕДИНЕНИЯ
+      getFormattedStatusBadge() {
+        if (this.connectionStatus === "ONLINE") return "🟢 ONLINE";
+        if (this.connectionStatus === "CONNECTING") return "🟡 CONNECTING";
+        if (this.connectionStatus === "ERROR") return "⚠️ ERROR";
+        return "🔴 OFFLINE";
+      },
 
-      updateOnlineHudBadge();
-      g.startGameSession(false, `ОНЛАЙН КО-ОП: ${activeRoomCode}`);
-      g.showCharacterThought(`«Подключено к онлайн-комнате ${activeRoomCode} (${localPlayerName}).»`, 3500);
-    }
+      updateOnlineHudBadge() {
+        const badge = document.getElementById("hudOnlineBadge");
+        const txt = document.getElementById("hudOnlineText");
+        if (!badge || !txt) return;
 
-    function syncWorldEventToFirebase() {
-      const g = window.__backroomsGame;
-      if (!activeRoomCode || !g) return;
-      const fb0 = g.levelFuseBoxes[0];
-      const fb1 = g.levelFuseBoxes[1];
-      let inst0 = 0, inst1 = 0;
-      if (fb0) fb0.slots.forEach(s => { if (s.installed) inst0++; });
-      if (fb1) fb1.slots.forEach(s => { if (s.installed) inst1++; });
-
-      update(ref(db, `rooms/${activeRoomCode}/world`), {
-        looseFuses: g.worldLooseFuses.map(lf => Boolean(lf.collected)),
-        fusesInstalledL0: inst0,
-        fusesInstalledL1: inst1,
-        doorTargetL0: fb0 ? fb0.doorTargetDeg : 0,
-        doorTargetL1: fb1 ? fb1.doorTargetDeg : 0,
-        elevOpenL0: Boolean(g.levelElevators[0]?.doorsOpen),
-        elevOpenL1: Boolean(g.levelElevators[1]?.doorsOpen),
-        cratesL1: g.l1Crates.map(c => ({ o: Boolean(c.isOpen), l: Boolean(c.isLooted) })),
-        updatedAt: Date.now()
-      }).catch(() => {});
-    }
-
-    // Живой список открытых комнат в меню «ПРИСОЕДИНИТЬСЯ К ИГРЕ»
-    onValue(ref(db, "rooms"), (snapshot) => {
-      const roomsContainer = document.getElementById("firebaseRoomsList");
-      const statusEl = document.getElementById("fbConnectionStatus");
-      if (statusEl) statusEl.textContent = "● FIREBASE ПОДКЛЮЧЕН";
-      if (!roomsContainer) return;
-
-      const allRooms = snapshot.val() || {};
-      const roomKeys = Object.keys(allRooms).filter(code => {
-        const r = allRooms[code];
-        return r && r.players && Object.keys(r.players).length > 0;
-      });
-
-      if (roomKeys.length === 0) {
-        roomsContainer.innerHTML = `
-          <div class="crt-box flex items-center justify-between">
-            <div>
-              <div class="font-bold text-white">ОБЩАЯ КОМНАТА #ASYNC-KV31</div>
-              <div class="text-[11px] text-blue-200/75">Активных лобби пока нет • Нажмите БЫСТРЫЙ ВХОД, чтобы создать/войти в #ASYNC-KV31</div>
-            </div>
-            <button type="button" data-join-room="ASYNC-KV31" class="px-2.5 py-1 bg-white text-[#05168b] font-bold text-xs hover:bg-blue-100">БЫСТРЫЙ ВХОД</button>
-          </div>
-        `;
-      } else {
-        roomsContainer.innerHTML = roomKeys.map(code => {
-          const r = allRooms[code];
-          const pCount = r.players ? Object.keys(r.players).length : 0;
-          const hostName = r.meta?.hostName || "HAZMAT";
-          const lvl = r.meta?.level === 1 ? "УРОВЕНЬ 1" : "УРОВЕНЬ 0";
-          return `
-            <div class="crt-box flex items-center justify-between">
-              <div>
-                <div class="font-bold text-yellow-200">${code} [${hostName}]</div>
-                <div class="text-[11px] text-blue-200/75">Игроков онлайн: ${pCount}/4 • Локация: ${lvl}</div>
-              </div>
-              <button type="button" data-join-room="${code}" class="px-2.5 py-1 bg-white text-[#05168b] font-bold text-xs hover:bg-blue-100">ВХОД</button>
-            </div>
-          `;
-        }).join("");
-      }
-
-      roomsContainer.querySelectorAll("[data-join-room]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const code = btn.getAttribute("data-join-room");
-          const nameVal = document.getElementById("inputJoinPlayerName")?.value || localPlayerName;
-          connectToFirebaseRoom(code, nameVal, false, 0);
-        });
-      });
-    });
-
-    window.backroomsNet = {
-      hostRoom: (roomCode, playerName, startLvl) => connectToFirebaseRoom(roomCode, playerName, true, startLvl),
-      joinRoom: (roomCode, playerName) => connectToFirebaseRoom(roomCode, playerName, false, 0),
-      isClientInRoom: () => Boolean(activeRoomCode && !isRoomHost),
-      syncWorldEvent: syncWorldEventToFirebase,
-      applySyncedMonstersL1: (elapsed, dt) => {
-        const g = window.__backroomsGame;
-        if (g && latestSyncedMonsters) {
-          g.applyMonstersState(latestSyncedMonsters, elapsed, dt);
+        if (!this.currentRoomId) {
+          badge.classList.add("hidden");
+          badge.classList.remove("flex");
+        } else {
+          badge.classList.remove("hidden");
+          badge.classList.add("flex");
+          const statusIcon =
+            this.connectionStatus === "ONLINE"
+              ? "🟢"
+              : this.connectionStatus === "CONNECTING"
+              ? "🟡"
+              : this.connectionStatus === "ERROR"
+              ? "⚠️"
+              : "🔴";
+          const totalPlayers = Math.max(1, this.roomPlayersMeta.size || 1 + this.remotePlayers.size);
+          const pingPart = this.pingMs ? ` • ${this.pingMs}ms` : "";
+          txt.textContent = `${statusIcon} ${this.currentRoomId} (${totalPlayers}/${MAX_ROOM_PLAYERS})${pingPart}`;
         }
       },
-      tick: (elapsed, dt, currentAnimMode) => {
-        const g = window.__backroomsGame;
-        if (!g || !activeRoomCode) return;
 
-        // Плавная интерполяция и анимация всех удалённых игроков в комнате
-        const myLevel = g.getCurrentLevel();
-        remotePlayers.forEach((rp) => {
-          const onSameLevel = (rp.level === myLevel) && !rp.hidden;
-          rp.rig.root.visible = onSameLevel;
-          if (!onSameLevel) return;
+      updateMenuUI() {
+        const statusBadgeText = this.getFormattedStatusBadge();
+        const fbStatusJoin = document.getElementById("fbConnectionStatus");
+        const lobbyStatus = document.getElementById("lobbyOnlineStatusText");
+        const pingLabel = document.getElementById("onlinePingJoinLabel");
 
-          rp.rig.root.position.x += (rp.targetX - rp.rig.root.position.x) * Math.min(1, dt * 12);
-          rp.rig.root.position.z += (rp.targetZ - rp.rig.root.position.z) * Math.min(1, dt * 12);
-
-          const targetRotY = rp.targetYaw + Math.PI;
-          const diffRot = Math.atan2(Math.sin(targetRotY - rp.rig.root.rotation.y), Math.cos(targetRotY - rp.rig.root.rotation.y));
-          rp.rig.root.rotation.y += diffRot * Math.min(1, dt * 12);
-
-          g.animateExplorerRig(rp.rig, rp.anim || "idle", dt, "vhs");
-          if (rp.crouching) {
-            rp.rig.pelvis.position.y -= 0.32;
-            rp.rig.torso.rotation.x += 0.25;
-          }
+        [fbStatusJoin, lobbyStatus].forEach((el) => {
+          if (!el) return;
+          el.textContent = this.pingMs && this.connectionStatus === "ONLINE"
+            ? `${statusBadgeText} (${this.pingMs} ms)`
+            : statusBadgeText;
+          el.className =
+            this.connectionStatus === "ONLINE"
+              ? "font-bold text-emerald-300"
+              : this.connectionStatus === "CONNECTING"
+              ? "font-bold text-amber-300"
+              : "font-bold text-red-400";
         });
 
-        // Отправка позиции нашего игрока в Firebase (~14 раз в секунду)
-        const now = performance.now();
-        if (now - lastNetSendTime > 70) {
-          lastNetSendTime = now;
-          const ps = g.getPlayerState();
-          update(ref(db, `rooms/${activeRoomCode}/players/${localPlayerId}`), {
-            name: localPlayerName,
-            x: ps.x,
-            z: ps.z,
-            yaw: ps.yaw,
-            level: ps.level,
-            anim: currentAnimMode || "idle",
-            crouching: ps.crouching,
-            flashlight: ps.flashlight,
-            hidden: ps.hidden,
-            updatedAt: Date.now()
-          }).catch(() => {});
+        if (pingLabel) {
+          pingLabel.textContent = this.pingMs ? `PING: ${this.pingMs} ms` : "PING: --";
+        }
 
-          if (isRoomHost) {
-            const mState = g.getMonstersState();
-            mState.l1Light = g.getLightStateL1();
-            update(ref(db, `rooms/${activeRoomCode}/monsters`), mState).catch(() => {});
+        const countEl = document.getElementById("lobbyPlayerCountText");
+        const codeEl = document.getElementById("lobbyCodeDisplay");
+        const hostEl = document.getElementById("lobbyHostNameText");
+        const stateEl = document.getElementById("lobbyRoomStateBadge");
+        const listContainer = document.getElementById("lobbyPlayersListContainer");
+        const startBtnLabel = document.getElementById("btnStartCoopLobbyLabel");
+        const startBtnHint = document.getElementById("btnStartCoopLobbyHint");
+
+        if (!this.currentRoomId) {
+          if (countEl) countEl.textContent = `0/${MAX_ROOM_PLAYERS}`;
+          if (codeEl) codeEl.textContent = "НЕ СОЗДАНА";
+          if (hostEl) hostEl.textContent = "—";
+          if (stateEl) stateEl.textContent = "СТАТУС: ВНЕ КОМНАТЫ";
+          if (startBtnLabel) startBtnLabel.textContent = "[ СОЗДАТЬ КОМНАТУ И НАЧАТЬ ] >";
+          if (startBtnHint) startBtnHint.textContent = "[НОВАЯ СЕССИЯ]";
+          if (listContainer) {
+            listContainer.innerHTML = `<div class="text-blue-200/65 text-[11px]">Нажмите [ СОЗДАТЬ КОМНАТУ ] или [ ПОДКЛЮЧИТЬСЯ ], чтобы войти в онлайн.</div>`;
           }
+          return;
+        }
+
+        const totalPlayers = Math.max(1, this.roomPlayersMeta.size);
+        const maxPlayers = Number(this.roomMeta?.maxPlayers || MAX_ROOM_PLAYERS);
+        if (countEl) countEl.textContent = `${totalPlayers}/${maxPlayers}`;
+        if (codeEl) codeEl.textContent = this.currentRoomId;
+        if (hostEl) hostEl.textContent = this.roomMeta?.hostName || this.nickname;
+        if (stateEl) {
+          const st = this.roomMeta?.state === "playing" ? "ИГРА ИДЕТ (PLAYING)" : "ОЖИДАНИЕ В ЛОББИ (LOBBY)";
+          stateEl.textContent = `${st} • УРОВЕНЬ ${Number(this.roomMeta?.level || 0)}`;
+        }
+
+        if (startBtnLabel && startBtnHint) {
+          if (this.isHost()) {
+            startBtnLabel.textContent = "[ НАЧАТЬ ИГРУ ] >";
+            startBtnHint.textContent = "[ВЫ — HOST]";
+          } else if (this.roomMeta?.state === "playing") {
+            startBtnLabel.textContent = "[ ВОЙТИ В ИДУЩУЮ ИГРУ ] >";
+            startBtnHint.textContent = "[PLAYING]";
+          } else {
+            startBtnLabel.textContent = "[ ВОЙТИ В КОРИДОР (ОЖИДАНИЕ HOST) ] >";
+            startBtnHint.textContent = "[КЛИЕНТ]";
+          }
+        }
+
+        if (listContainer) {
+          const rows = [];
+          const hostUid = this.roomMeta?.hostUid;
+          this.roomPlayersMeta.forEach((p, pid) => {
+            const isH = pid === hostUid;
+            const isMe = pid === this.uid;
+            const nameStr = p.nickname || p.name || pid;
+            const roleBadge = isH ? " — <strong class='text-yellow-300'>HOST</strong>" : "";
+            const meBadge = isMe ? " <span class='text-blue-200/75'>(ВЫ)</span>" : "";
+            const lvlBadge = `<span class='text-[10px] text-blue-200/65 ml-1'>[LVL ${Number(p.level || 0)}]</span>`;
+            rows.push(`<div class="flex items-center justify-between py-0.5 border-b border-blue-200/15">
+              <span>🟢 ${nameStr}${roleBadge}${meBadge}</span>
+              ${lvlBadge}
+            </div>`);
+          });
+          listContainer.innerHTML = rows.join("") || `<div class="text-blue-200/70">🟢 ${this.nickname} — HOST</div>`;
         }
       }
     };
+
+    window.BackroomsOnlineManager = BackroomsOnlineManager;
+    BackroomsOnlineManager.init();
   </script>
 
 </body>
